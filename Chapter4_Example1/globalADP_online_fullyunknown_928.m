@@ -40,7 +40,6 @@ for i=0:9
     %x=[1;zeros(9,1)]';
     for j=0:49
         [t,x] = ode45(@polysys,[j*T,j*T+T]+50*i*T,[x(end,1) zeros(1,9)]');
-        %[t,x] = ode_yuri(j*T,j*T+T,[x(end,1) zeros(1,9)]',0.001);
         C1 = [C1; 1/2*(x(end,1)^2-x(1,1)^2) 1/3*(x(end,1)^3-x(1,1)^3) 1/4*(x(end,1)^4-x(1,1)^4)];
         C2 = [C2; x(end,2:6)];
         C3 = [C3; x(end,7:9)];
@@ -53,21 +52,21 @@ for i=0:9
     end
     
     if norm(P(:)-Pold(:))>0.007
+        %%----------------------------------------------------------------%
+        %            Beging: Solving SDP using the CVX package            %
+        %%----------------------------------------------------------------%
         cvx_begin sdp       
         variable Wn(3,1)
         variable dQs(3,3) symmetric
-        Qv=-inv([C2 -C3]'*[C2 -C3])*[C2 -C3]'*(CQ+C1*Wn(:));
-        dQs(1,1)==Qv(1);
-        dQs(1,2)+dQs(2,1)==Qv(2);
-        dQs(1,3)+dQs(3,1)+dQs(2,2)==Qv(3);
-        dQs(3,2)+dQs(2,3)==Qv(4);
-        dQs(3,3)==Qv(5);
-        dQs>=0;  
+        Qv = -inv([C2 -C3]'*[C2 -C3])*[C2 -C3]'*(CQ+C1*Wn(:));
+        dQs(1,1) == Qv(1);                     %#ok<*EQEFF> CVX Syntax                    
+        dQs(1,2) + dQs(2,1) == Qv(2);
+        dQs(1,3) + dQs(3,1)+dQs(2,2) == Qv(3);
+        dQs(3,2) + dQs(2,3) == Qv(4);
+        dQs(3,3) == Qv(5);
+        dQs >= 0;  
         Pn = [1/2*(Wn(1)) 1/6*(Wn(2));  1/6*(Wn(2)) 1/4*(Wn(3))];
-        Pn<=P;
-        
-        %%minimize([-1 100]*Pn*[-1 ;100]+[1 100]*Pn*[1 ;100])
-        %minimize(Pn(1,1)+Pn(2,2))
+        Pn <= P;
         minimize(c(1)*Pn(1,1)+c(3)*Pn(2,2))
 		W=Qv(6:8);
         wsave=[wsave;W(:)' ];
@@ -77,6 +76,9 @@ for i=0:9
         Qsave=[Qsave;dQs(:)'];
         Pold=P;
         P=Pn;
+        %%----------------------------------------------------------------%
+        %              End: Solving SDP using the CVX package             %
+        %%----------------------------------------------------------------%
     else
         noise_on=0;
         disp(num2str(i))
