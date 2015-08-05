@@ -1,6 +1,7 @@
-function dx = polysys0(x,u)
- % This function discribes the dynamics of a polynomial system
- % dx/dt = F(1)*x + F(2)*x^2 + F(3)*x^3 +  
- F = [0 0.01 0];
- dx = F * (x.^[1 2 3]') + u;
+function dx=polysys0(t,x)
+global W F Q W1
+ sgm  =  x.^[1 2 3]';
+ %e  = (0.01*sin(10*t)+0.01*sin(3*t)+0.01*sin(100*t))*noise_on;
+ u  = -1/2*W1(:)'*sgm;%+e; 
+ dx = F * sgm + u;
  end
