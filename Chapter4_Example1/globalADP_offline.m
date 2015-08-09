@@ -1,15 +1,18 @@
 %Global ADP
-global W F Q
-F=-1*[1 0.1 1];
+% global W F Q
+% F=-1*[1 0.1 1];
+F = [0 0.01 0];
+
 Q=[1 0 0;0 1 0;0 0 1];
-W=[0 0 0];
+Q =0.01*[1 0 0;0 1 0;0 0 0];
+W=[0.1 0 0.01];
 P=[10 0;0 10]; 
 Psave=[];
 Qsave=[];
 
 Qk = Q + 1/4*W'*W;
 
-for i=1:10
+for i=1:3
     cvx_begin sdp
     
     variable dQs(3,3) symmetric
@@ -36,7 +39,7 @@ for i=1:10
     Pn<=P-(1e-10)*eye(2);
     minimize(trace(dQs))
     
-    cvx_end
+    cvx_end;
     W=Wn;
     P=Pn;
     Psave=[Psave;P(:)']
