@@ -297,7 +297,8 @@ end
 % LocalComputeControl: Compute the control input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function u = LocalComputeControl(x,K,noiseFlag,t)
- u = K(:)'*x.^[1 2 3]'+LocalNoise(t)*noiseFlag;
+ u = -1/2*K(:)'*x.^[1 2 3]'+LocalNoise(t)*noiseFlag;
+ u = abs(u);
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
