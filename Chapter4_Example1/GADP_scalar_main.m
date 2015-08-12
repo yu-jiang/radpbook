@@ -1,5 +1,5 @@
 function SimResults = GADP_scalar_main()
-% Demo for Global Adaptive Dynamic Programming for Continuous-time
+% Demo #1 for Global Adaptive Dynamic Programming for Continuous-time
 % Nonlinear Systems, by Yu Jiang and Zhong-Ping
 % Jiang, IEEE Transasctions on Automatic Control, 2015
 %

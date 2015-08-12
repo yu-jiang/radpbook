@@ -1,28 +1,47 @@
-function [] = GADP_FT_main()
-global K
+function SimResults = GADP_FT_main()
+% Demo #2 for Global Adaptive Dynamic Programming for Continuous-time
+% Nonlinear Systems, by Yu Jiang and Zhong-Ping
+% Jiang, IEEE Transasctions on Automatic Control, 2015
+%
+% System requirements:
+% - MATLAB (Manually Tested in MATLAB R2014b)
+% - MATLAB Symbolic Toolbox
+% - CVX (free to download at http://cvxr.com/cvx/)
+%
+% Copyright 2015 Yu Jiang 
+% 
+% Contact: yu.jiang@nyu.edu (Yu Jiang)
 
-%% Initialize Parameters
-% x1  x2  x1x1 x1x2 x2x2  x1^3  x1x1x2 x1x2x2   x2^3
+% Initialize Parameters
+            % x1  x2  x1x1 x1x2 x2x2  x1^3  x1x1x2 x1x2x2   x2^3
 Params.F = [0   0    0    1    0     -1     0      -1       0;
             1   2    0    0    0      0     0       0       0];
+Params.G = [0 0.7; 0.6 0.7];
 Params.Q = diag([1,1,0,0,0,0,0,0,0]);
 Params.R = 0.001;
 
 % Inital control gains, thees values are taken from literature
 Params.K0 = [10.283 -13.769; -10.7 -3.805];
+
 % Extend the gains to match the new basis
 K = [Params.K0 zeros(2,7)];
+Kold = K;
 
 Params.Gl = [0 1; 1 1];       % Lower Bound of G
 Params.Gu = [0 0.5; 0.5 0.5]; % Upper Bound of G
 
 % Initialize the value function
-p_old = LocalInitialValueControlPair(Params);
+p = LocalInitialValueControlPair(Params);
+p_old = ones(size(p))*100; 
 
-Kold = K;
 x0 =[1 -2]; % Initial Condition
-X=x0;
+X = x0;
 
+% Policy Iteraton Parameters
+IterMax = 7;        %Max iterations
+T = 0.02;           %Length of interval for data collection
+NumIntervals = 200; %Number of intervals for one interation 
+tol_conv = 0.001;   %Convergence criterion
 
 % Compute the objective function for SOSs in Poilcy Iteration
 x1min = -0.1;
@@ -37,172 +56,83 @@ Xsave=[];
 tsave=[];
 
 
-T=0.02; %0.005;
-for j=1:7
+
+for j=1:IterMax
     % Online Simulation for Data Collection
-    Phi=[]; Xi=[]; Theta=[]; % Matricies to collect online data
-    for i=0:200-1
-        [t,X] = ode45(@jetsysonline, ...
-            [i*T,(i+1)*T]+(j-1)*200*T,...
-            [X(end,1:2) zeros(1,35+9)]);
-        Phi = [Phi;X(end,2+1:2+34+9)];
-        Xi = [Xi;X(end,end)];
-        Theta = [Theta; bphi(X(end,1),X(end,2))'-bphi(X(1,1),X(1,2))'];
-        Xsave = [Xsave; X(:,1:2)];
-        tsave = [tsave; t(:)];
-    end
+    [Phi, Xi, Theta, Xsave, tsave, t, X] = LocalOnlineDataCollection(T, ...
+        NumIntervals, X, Xsave, tsave, j, Params, K);
     
     % Online Policy Iteration
-    [p, K] = LocalOnlinePolicyIteratoin(Theta, Xi, Phi, p_old, c);
+    if norm(p - p_old)>tol_conv
+        p_old = p;
+        [p, K] = LocalOnlinePolicyIteratoin(Theta, Xi, Phi, p, c);
+        numAIter = j;
+    end
     
-    psave = [psave;p(:)'];
+    psave = [psave;p_old'];
     %ksave=[ksave;K];
     % P0=P;
-    p_old = p;
+    
     if j==1
-        % P1=P;
+        p1 = p_old;
     end
+end
+% Note: Till this point, all the online simulation is finished.
+
+% Generate figures
+SimResults.hFigs = LocalPostProcess(Params, ...
+    t, Xsave, tsave, p, p1, Kold,K, numAIter);
 end
 
 
-Knew = K;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FTSystemWrapper: System Dynamics with external integrators for learning
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function dxx = FTSystemWrapper(t,x,Params,K)
 
-[t,x]=ode45(@jetsys0,[t(end) 30], Xsave(end,:));
-tsave=[tsave;t(:)];
-Xsave=[Xsave; x];
-
-x00 = Xsave(end,:) +[5,10];
-[t,x]=ode45(@jetsys0,[30 35], x00);
-tsave=[tsave;t(:)];
-Xsave=[Xsave; x];
-
-%% Draw the figures
-%close all
-K=[K0 zeros(2,7)];
-[t,x]=ode45(@jetsys0,[30 35], x00);
-
-%[t1,x1]=ode45(@jetsys0,[15 40], x0+[20,10]);
-% t=[t;t1];
-% x=[x;x1];
-%% figure(1)
-subplot(2,2,1)
-
-plot(tsave,Xsave(:,1), 'b-','Linewidth', 2)
-axis([0 35 -3 7])
-legend('With GADP-based controller')
-xlabel('time (sec)')
-ylabel('x_1')
-
-subplot(2,2,2)
-plot(tsave,Xsave(:,1),'b-',t,x(:,1),'r-.', 'Linewidth', 2)
-legend('With GADP-based controller', 'With initial controller')
-xlabel('time (sec)')
+F = Params.F;
+G = Params.G;
+Q = Params.Q;
+R = Params.R;
 
 
-axis([29.8 30.5 -3 7])
+%e=5*sum(sin(2.5*[2 -3 5 -7 9 -11 13 -17 19 -23 29 -31 37 -41 43 -53 57 -59 61 -67 73 -79 83 -91 101]*t));
+e1 = 10*sum(sin(1*[38.1558   76.5517   79.5200   18.6873   48.9764   44.5586   64.6313   70.9365   75.4687   27.6025]*t));
+e2 = 20*sum(sin(1*[17.9703   15.5098  -33.7388  -38.1002   100   45.9744  -15.9614    8.5268  -27.6188   25.1267]*t));
+%e=sum(sin(1*[0.07 0.3 2 -3 5 -7 9 -11 13 -17 19 -23 29 -31 37 -41 43 -53 57 -59 61 -67 91 193]*t));
 
 
-subplot(2,2,3)
-plot(tsave,Xsave(:,2),'b-','Linewidth', 2)
-axis([0 35 -4 15])
-legend('With GADP-based controller')
-xlabel('time (sec)')
-ylabel('x_2')
+u=K*sigma(x(1),x(2))+[e1;e2];
 
+dx=F*sigma(x(1),x(2))+G*u;
+dphi=[bsigma(x(1),x(2));2*e1*R*sigma(x(1),x(2));2*e2*R*sigma(x(1),x(2))];
+dQ=sigma(x(1),x(2))'*(Q+K'*R*K)*sigma(x(1),x(2));
 
-subplot(2,2,4)
-plot(tsave,Xsave(:,2),'b-',t,x(:,2),'r-.', 'Linewidth', 2)
-axis([29.8 30.5 -4 15])
-legend('With GADP-based controller', 'With initial controller')
-xlabel('time (sec)')
-
-
-
-%subplot(313)
-%plot(t,x*K0(:),'b-')%,t,x(:,2),'r:', 'Linewidth', 2)
-%state_annotations
-%saveas(gcf,'Ex2_state.eps', 'psc2');
-%saveas(gcf,'Ex2_state.pdf');
-%saveas(gcf,'Ex2_state.jpg');
-
-
-%%
-figure(2)
-x1=-10:1:10;
-x2=-10:1:10;
-vn=zeros(length(x1),length(x2));
-v1=zeros(length(x1),length(x2));
-vs=[];
-us=[];
-un=[];
-kn=vn;
-k1=v1;
-for i=1:length(x1)
-    for j=1:length(x2)
-        vn(i,j)=phi(x1(i),x2(j))'*P*phi(x1(i),x2(j));
-        v1(i,j)=phi(x1(i),x2(j))'*P1*phi(x1(i),x2(j));
-        k1(i,j)=norm([Kold(1,:)*sigma(x1(i),x2(j)),Kold(2,:)*sigma(x1(i),x2(j))]);
-        kn(i,j)=norm([Knew(1,:)*sigma(x1(i),x2(j)),Knew(2,:)*sigma(x1(i),x2(j))]);
-    end
+dxx=[dx;dphi;dQ]; %size 2+ 34 +1 = 37
 end
-surf(x1,x2,vn')
-hold on
-surf(x1,x2,v1')
-hold off
-xlabel('x_1', 'FontSize', 12)
-ylabel('x_2', 'FontSize', 12)
-% Create axes
-view(gca,[-40.5 14]);
-annotation(gcf,'textarrow',[0.216071428571429 0.174535137214669],...
-    [0.845238095238095 0.731440045897881],'TextEdgeColor','none','FontSize',12,...
-    'String',{'V_0(x1,x2,0)'});
-annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
-    [0.140476190476191 0.257882960413087],'TextEdgeColor','none','FontSize',12,...
-    'String',{'V_7(x1,x2,0)'});
-%saveas(gcf,'Ex2_cost.eps', 'psc2');
-%saveas(gcf,'Ex2_cost.pdf');
 
+function dx = jetsys0(x, Params, K)
+Fc = Params.F + Params.G*K;
+dx = Fc*sigma(x(1),x(2));
+end
 
-%%
-figure(3)
-surf(x1,x2,kn')
-hold on
-surf(x1,x2,k1')
-hold off
-xlabel('x_1')
-ylabel('x_2')
-annotation(gcf,'textarrow',[0.216071428571429 0.174535137214669],...
-    [0.845238095238095 0.731440045897881],'TextEdgeColor','none','FontSize',12,...
-    'String',{'|u_1|^2'});
-annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
-    [0.140476190476191 0.257882960413087],'TextEdgeColor','none','FontSize',12,...
-    'String',{'|u_7|^2'});
-%saveas(gcf,'Ex2_control_surf.eps', 'psc2');
-%export_fig Ex2_control -pdf -transparent
-%%
-% figure(4)
-% plot(1:8, psave(:,1),'r-o',1:8, psave(:,3), '-*', 1:8, psave(:,5), '-^', 'linewidth',2)
-% axis([0.5,8.5,-2, 17])
-% legend('p_{i,1} (x_1^2)', 'p_{i,2} (x_2^2)', 'p_{i,3} (x_1^2x_2)')
-% xlabel('Iteration', 'FontSize', 12)
-% set(gcf,'PaperPositionMode','auto')
-%saveas(gcf,'Ex2_psave.pdf') %, 'psc2');
-%saveas(gcf,'Ex2_psave.eps', 'psc2');
-%
-%
-%
-% %%
-% % figure(2)
-% % export_fig Ex2_cost -pdf -transparent
-figure(3)
-%export_fig Ex2_control -pdf -transparent
-%figure(4)
-%export_fig Ex2_psave -pdf -transparent
+function [Phi, Xi, Theta, Xsave, tsave, t, X] = LocalOnlineDataCollection(T, NumIntervals, X, Xsave, tsave, j, Params, K)
+Phi=[]; Xi=[]; Theta=[]; % Matricies to collect online data
+for i = 0:NumIntervals - 1
+    [t,X] = ode45(@(t,x) FTSystemWrapper(t,x,Params,K), ...
+        [i,(i+1)]*T+(j-1)*NumIntervals*T,...
+        [X(end,1:2) zeros(1,35+9)]);
+    Phi = [Phi;X(end,2+1:2+34+9)];
+    Xi = [Xi;X(end,end)];
+    Theta = [Theta; bphi(X(end,1),X(end,2))'-bphi(X(1,1),X(1,2))'];
+    Xsave = [Xsave; X(:,1:2)];
+    tsave = [tsave; t(:)];
+end
 end
 
 function [p,K] = LocalOnlinePolicyIteratoin(Theta, Xi, Phi, p0, c)
 cvx_begin sdp
-presicion best
+% cvx_precision best
 variable p(12,1)
 variable P(5,5) symmetric
 variable L(9,9) symmetric
@@ -249,9 +179,18 @@ L>=0;
 
 % 3) SOS constraint:
 % V(x) <= V_old(x)
-(p - p0) == [P(1,1) P(2,1)+P(1,2) P(2,2) P(1,3)+P(3,1) P(1,4)+P(4,1)+P(2,3)+P(3,2) ...
-    P(1,5)+P(5,1)+P(2,4)+P(4,2) P(2,5)+P(5,2) P(3,3) P(3,4)+P(4,3) ...
-    P(3,5)+P(5,3)+P(4,4) P(4,5)+P(5,4) P(5,5)]';
+(p - p0) == [P(1,1) 
+    P(2,1) + P(1,2) 
+    P(2,2) 
+    P(1,3) + P(3,1) 
+    P(1,4) + P(4,1) + P(2,3) + P(3,2)
+    P(1,5) + P(5,1) + P(2,4) + P(4,2)
+    P(2,5) + P(5,2) 
+    P(3,3)
+    P(3,4) + P(4,3)
+    P(3,5) + P(5,3)+P(4,4)
+    P(4,5) + P(5,4)
+    P(5,5)];
 P <= 0;
 
 cvx_end
@@ -335,7 +274,7 @@ end
 
 function c = LocalComputeObjectiveFcn(x1min, x1max, x2min, x2max)
 % In the SOS-base Policy Iteration, we need to solve an SOSp in each
-% iteraton. The objective of the SOSp is 
+% iteraton. The objective of the SOSp is
 %
 % min integration{V(x)}_Omega
 %
@@ -356,4 +295,168 @@ v_basis_fcn=[ x1*x1;
     x1*x2*x2*x2;
     x2*x2*x2*x2;];
 c = double(int(int(v_basis_fcn,x1min,x1max),x2min,x2max));
+end
+
+function hFigs = LocalPostProcess(Params, t, Xsave, tsave, p, p1, Kold,Knew, numAIter)
+close all
+global K
+
+[t,x] = ode45(@(t,x)jetsys0(x, Params, Knew),[t(end) 30], Xsave(end,:));
+tsave = [tsave;t(:)];
+Xsave = [Xsave; x];
+
+x00   = Xsave(end,:) + [5,10];         % coordinate transform
+[t,x] = ode45(@(t,x)jetsys0(x, Params, Knew),[30 35], x00);
+tsave = [tsave;t(:)];
+Xsave = [Xsave; x];
+
+K     = [Params.K0 zeros(2,7)];
+[t,x] = ode45(@(t,x)jetsys0(x, Params, Kold),[30 35], x00);
+
+% Figure 1. Plot state trajectories
+h1 = figure(1);
+subplot(2,2,1)
+plot(tsave,Xsave(:,1), 'b-','Linewidth', 2)
+axis([0 35 -3 7])
+legend('With GADP-based controller')
+xlabel('time (sec)')
+ylabel('x_1')
+
+subplot(2,2,2)
+plot(tsave,Xsave(:,1),'b-',t,x(:,1),'r-.', 'Linewidth', 2)
+legend('With GADP-based controller', 'With initial controller')
+xlabel('time (sec)')
+axis([29.8 30.5 -3 7])
+
+subplot(2,2,3)
+plot(tsave,Xsave(:,2),'b-','Linewidth', 2)
+axis([0 35 -4 15])
+legend('With GADP-based controller')
+xlabel('time (sec)')
+ylabel('x_2')
+
+subplot(2,2,4)
+plot(tsave,Xsave(:,2),'b-',t,x(:,2),'r-.', 'Linewidth', 2)
+axis([29.8 30.5 -4 15])
+legend('With GADP-based controller', 'With initial controller')
+xlabel('time (sec)')
+
+% Figure 2. Plot and compare the value functions
+h2 = figure(2);
+x1 = -10:1:10;
+x2 = -10:1:10;
+vn = zeros(length(x1),length(x2));
+v1 = zeros(length(x1),length(x2));
+vs = []; us = []; un = [];
+kn = vn;
+k1 = v1;
+for i=1:length(x1)
+    for j=1:length(x2)
+        vn(i,j) = p(:)'*bphi(x1(i),x2(j));
+        v1(i,j) = p1(:)'*bphi(x1(i),x2(j));
+        k1(i,j) = norm([Kold(1,:)*sigma(x1(i),x2(j)), ...
+                  Kold(2,:)*sigma(x1(i),x2(j))]);
+        kn(i,j) = norm([Kold(1,:)*sigma(x1(i),x2(j)), ...
+                  Kold(2,:)*sigma(x1(i),x2(j))]);
+    end
+end
+surf(x1,x2,vn')
+hold on
+surf(x1,x2,v1')
+hold off
+xlabel('x_1', 'FontSize', 12)
+ylabel('x_2', 'FontSize', 12)
+% Create axes
+view(gca,[-40.5 14]);
+annotation(gcf,'textarrow',[0.216071428571429 0.174535137214669],...
+    [0.845238095238095 0.731440045897881], ...
+    'TextEdgeColor','none','FontSize',12,...
+    'String',{'V_0(x1,x2,0)'});
+annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
+    [0.140476190476191 0.257882960413087], ...
+    'TextEdgeColor','none','FontSize',12,...
+    'String',{sprintf('V_%d(x1,x2,0)',numAIter)});
+
+% Figure 3. Plot the control curve
+h3 = figure(3);
+surf(x1,x2,kn')
+hold on
+surf(x1,x2,k1')
+hold off
+xlabel('x_1')
+ylabel('x_2')
+annotation(gcf,'textarrow',[0.216071428571429 0.174535137214669],...
+    [0.845238095238095 0.731440045897881], ...
+    'TextEdgeColor','none','FontSize',12,...
+    'String',{'|u_1|^2'});
+annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
+    [0.140476190476191 0.257882960413087], ...
+    'TextEdgeColor','none','FontSize',12,...
+    'String',{sprintf('|u_%d|^2',numAIter)});
+%export_fig Ex2_control -pdf -transparent
+hFigs = [h1;h2;h3];
+end
+
+function y = phi(x1,x2)
+y = [x1;
+    x2;
+    x1*x1;
+    x1*x2;
+    x2*x2];
+end
+
+function y = sigma(x1,x2)
+y = [x1;
+    x2;
+    x1*x1;
+    x1*x2;
+    x2*x2;
+    x1*x1*x1;
+    x1*x1*x2;
+    x1*x2*x2;
+    x2*x2*x2];
+end
+
+function y = bphi(x1,x2)
+y = [x1*x1;
+    x1*x2;
+    x2*x2;
+    x1*x1*x1;
+    x1*x1*x2;
+    x1*x2*x2;
+    x2*x2*x2;
+    x1*x1*x1*x1;
+    x1*x1*x1*x2;
+    x1*x1*x2*x2;
+    x1*x2*x2*x2;
+    x2*x2*x2*x2;];
+end
+
+function y = bsigma(x1,x2)
+y = [x1*x1;
+    x1*x2;
+    x2*x2;
+    x1*x1*x1;
+    x1*x1*x2;
+    x1*x2*x2;
+    x2*x2*x2;
+    x1*x1*x1*x1;
+    x1*x1*x1*x2;
+    x1*x1*x2*x2;
+    x1*x2*x2*x2;
+    x2*x2*x2*x2;
+    x1*x1*x1*x1*x1;
+    x1*x1*x1*x1*x2;
+    x1*x1*x1*x2*x2;
+    x1*x1*x2*x2*x2;
+    x1*x2*x2*x2*x2;
+    x2*x2*x2*x2*x2;
+    x1*x1*x1*x1*x1*x1;
+    x1*x1*x1*x1*x1*x2;
+    x1*x1*x1*x1*x2*x2;
+    x1*x1*x1*x2*x2*x2;
+    x1*x1*x2*x2*x2*x2;
+    x1*x2*x2*x2*x2*x2;
+    x2*x2*x2*x2*x2*x2];
+
 end
