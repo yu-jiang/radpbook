@@ -2,6 +2,10 @@ function SimResults = GADP_FT_main()
 % Demo #2 for Global Adaptive Dynamic Programming for Continuous-time
 % Nonlinear Systems, by Yu Jiang and Zhong-Ping
 % Jiang, IEEE Transasctions on Automatic Control, 2015
+% 
+% This paper can be found at 
+% 1. http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7063901
+% 2. http://arxiv.org/pdf/1401.0020.pdf
 %
 % System requirements:
 % - MATLAB (Manually Tested in MATLAB R2014b)
@@ -25,7 +29,7 @@ Params.K0 = [10.283 -13.769; -10.7 -3.805];
 
 % Extend the gains to match the new basis
 K = [Params.K0 zeros(2,7)];
-Kold = K;
+K_old = K;
 
 Params.Gl = [0 1; 1 1];       % Lower Bound of G
 Params.Gu = [0 0.5; 0.5 0.5]; % Upper Bound of G
@@ -33,6 +37,7 @@ Params.Gu = [0 0.5; 0.5 0.5]; % Upper Bound of G
 % Initialize the value function
 p = LocalInitialValueControlPair(Params);
 p_old = ones(size(p))*100; 
+p1 = p_old; % for the purpose of plotting.
 
 x0 =[1 -2]; % Initial Condition
 X = x0;
@@ -50,14 +55,13 @@ x2min = -0.1;
 x2max =  0.1;
 c = LocalComputeObjectiveFcn(x1min, x1max, x2min, x2max);
 
+% This varibles go to the output
 psave=[];
 ksave= K;
 Xsave=[];
 tsave=[];
 
-
-
-for j=1:IterMax
+for j = 1:IterMax
     % Online Simulation for Data Collection
     [Phi, Xi, Theta, Xsave, tsave, t, X] = LocalOnlineDataCollection(T, ...
         NumIntervals, X, Xsave, tsave, j, Params, K);
@@ -69,19 +73,19 @@ for j=1:IterMax
         numAIter = j;
     end
     
-    psave = [psave;p_old'];
-    %ksave=[ksave;K];
-    % P0=P;
-    
-    if j==1
-        p1 = p_old;
-    end
+    psave = [psave;p_old'];    %#ok<AGROW>
+    ksave = [ksave;K];         %#ok<AGROW>
 end
 % Note: Till this point, all the online simulation is finished.
 
+SimResults.psave = psave;
+SimResults.ksave = ksave;
+SimResults.xsave = Xsave;
+SimResults.tsave = tsave;
+
 % Generate figures
 SimResults.hFigs = LocalPostProcess(Params, ...
-    t, Xsave, tsave, p, p1, Kold,K, numAIter);
+    t, Xsave, tsave, p, p1, K_old,K, numAIter);
 end
 
 
@@ -89,33 +93,42 @@ end
 % FTSystemWrapper: System Dynamics with external integrators for learning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dxx = FTSystemWrapper(t,x,Params,K)
+% Create local copies of the parameters
+[F,G,Q,R] = deal(Params.F,Params.G,Params.Q,Params.R); 
 
-F = Params.F;
-G = Params.G;
-Q = Params.Q;
-R = Params.R;
+[e1,e2] = LocalExplNoise(t);
+xm = LocalPlantMono(x(1),x(2));
+u = K*xm + [e1;e2];
 
-
-%e=5*sum(sin(2.5*[2 -3 5 -7 9 -11 13 -17 19 -23 29 -31 37 -41 43 -53 57 -59 61 -67 73 -79 83 -91 101]*t));
-e1 = 10*sum(sin(1*[38.1558   76.5517   79.5200   18.6873   48.9764   44.5586   64.6313   70.9365   75.4687   27.6025]*t));
-e2 = 20*sum(sin(1*[17.9703   15.5098  -33.7388  -38.1002   100   45.9744  -15.9614    8.5268  -27.6188   25.1267]*t));
-%e=sum(sin(1*[0.07 0.3 2 -3 5 -7 9 -11 13 -17 19 -23 29 -31 37 -41 43 -53 57 -59 61 -67 91 193]*t));
-
-
-u=K*sigma(x(1),x(2))+[e1;e2];
-
-dx=F*sigma(x(1),x(2))+G*u;
-dphi=[bsigma(x(1),x(2));2*e1*R*sigma(x(1),x(2));2*e2*R*sigma(x(1),x(2))];
-dQ=sigma(x(1),x(2))'*(Q+K'*R*K)*sigma(x(1),x(2));
+dx = F*xm + G*u;
+dphi = [LocalQuadPlatMono(x(1),x(2));2*e1*R*xm;2*e2*R*xm];
+dQ = xm'*(Q+K'*R*K)*xm;
 
 dxx=[dx;dphi;dQ]; %size 2+ 34 +1 = 37
 end
 
-function dx = jetsys0(x, Params, K)
+%% --------------------------------------------------------------
+% FTSys - The actual system dynamics
+% ------------------------------------------------------------------------
+function dx = FTSys(x, Params, K)
 Fc = Params.F + Params.G*K;
-dx = Fc*sigma(x(1),x(2));
+dx = Fc*LocalPlantMono(x(1),x(2));
 end
 
+
+%% -------------------------------------------------------------- 
+% LocalExplNoise: 
+% Local Function to generate Exploration Noise
+% ------------------------------------------------------------------------
+function [e1,e2] = LocalExplNoise(t)
+e1 = 10*sum(sin([38.1558   76.5517   79.5200   18.6873   48.9764   44.5586   64.6313   70.9365   75.4687   27.6025]*t));
+e2 = 20*sum(sin([17.9703   15.5098  -33.7388  -38.1002   100   45.9744  -15.9614    8.5268  -27.6188   25.1267]*t));
+end
+
+%% -------------------------------------------------------------- 
+% LocalOnlineDateCollection:
+% Local function for simulation and online data collection
+% ------------------------------------------------------------------------
 function [Phi, Xi, Theta, Xsave, tsave, t, X] = LocalOnlineDataCollection(T, NumIntervals, X, Xsave, tsave, j, Params, K)
 Phi=[]; Xi=[]; Theta=[]; % Matricies to collect online data
 for i = 0:NumIntervals - 1
@@ -124,12 +137,17 @@ for i = 0:NumIntervals - 1
         [X(end,1:2) zeros(1,35+9)]);
     Phi = [Phi;X(end,2+1:2+34+9)];
     Xi = [Xi;X(end,end)];
-    Theta = [Theta; bphi(X(end,1),X(end,2))'-bphi(X(1,1),X(1,2))'];
+    Theta = [Theta; LocalQuadPhiX(X(end,1),X(end,2))'-LocalQuadPhiX(X(1,1),X(1,2))'];
     Xsave = [Xsave; X(:,1:2)];
     tsave = [tsave; t(:)];
 end
 end
 
+%% -------------------------------------------------------------- 
+% LocalOnlinePolicyIteratoin:
+% Local function for implementing online SOS policy iteration.
+% Note: This does not require the system dynamics
+% ------------------------------------------------------------------------
 function [p,K] = LocalOnlinePolicyIteratoin(Theta, Xi, Phi, p0, c)
 cvx_begin sdp
 % cvx_precision best
@@ -272,6 +290,10 @@ L2<=0;
 cvx_end
 end
 
+%% -------------------------------------------------------------- 
+% LocalComputeObjectiveFcn: - Compute Coefficients for the objective
+% functioin in SOSp PI
+% ------------------------------------------------------------------------
 function c = LocalComputeObjectiveFcn(x1min, x1max, x2min, x2max)
 % In the SOS-base Policy Iteration, we need to solve an SOSp in each
 % iteraton. The objective of the SOSp is
@@ -282,36 +304,27 @@ function c = LocalComputeObjectiveFcn(x1min, x1max, x2min, x2max)
 % performance.
 
 syms x1 x2
-v_basis_fcn=[ x1*x1;
-    x1*x2;
-    x2*x2;
-    x1*x1*x1;
-    x1*x1*x2;
-    x1*x2*x2;
-    x2*x2*x2;
-    x1*x1*x1*x1;
-    x1*x1*x1*x2;
-    x1*x1*x2*x2;
-    x1*x2*x2*x2;
-    x2*x2*x2*x2;];
+v_basis_fcn = LocalQuadPhiX(x1,x2);
 c = double(int(int(v_basis_fcn,x1min,x1max),x2min,x2max));
 end
 
-function hFigs = LocalPostProcess(Params, t, Xsave, tsave, p, p1, Kold,Knew, numAIter)
-close all
-global K
 
-[t,x] = ode45(@(t,x)jetsys0(x, Params, Knew),[t(end) 30], Xsave(end,:));
+%% --------------------------------------------------------------
+% LocalPostProcess - Post process data and plot the resuts
+% ------------------------------------------------------------------------
+function hFigs = LocalPostProcess(Params, t, Xsave, tsave, p, p1, K_old,Knew, numAIter)
+close all
+
+[t,x] = ode45(@(t,x)FTSys(x, Params, Knew),[t(end) 30], Xsave(end,:));
 tsave = [tsave;t(:)];
 Xsave = [Xsave; x];
 
 x00   = Xsave(end,:) + [5,10];         % coordinate transform
-[t,x] = ode45(@(t,x)jetsys0(x, Params, Knew),[30 35], x00);
+[t,x] = ode45(@(t,x)FTSys(x, Params, Knew),[30 35], x00);
 tsave = [tsave;t(:)];
 Xsave = [Xsave; x];
 
-K     = [Params.K0 zeros(2,7)];
-[t,x] = ode45(@(t,x)jetsys0(x, Params, Kold),[30 35], x00);
+[t,x] = ode45(@(t,x)FTSys(x, Params, K_old),[30 35], x00);
 
 % Figure 1. Plot state trajectories
 h1 = figure(1);
@@ -343,8 +356,8 @@ xlabel('time (sec)')
 
 % Figure 2. Plot and compare the value functions
 h2 = figure(2);
-x1 = -10:1:10;
-x2 = -10:1:10;
+x1 = (-10:1:10)/100;
+x2 = (-10:1:10)/100;
 vn = zeros(length(x1),length(x2));
 v1 = zeros(length(x1),length(x2));
 vs = []; us = []; un = [];
@@ -352,12 +365,12 @@ kn = vn;
 k1 = v1;
 for i=1:length(x1)
     for j=1:length(x2)
-        vn(i,j) = p(:)'*bphi(x1(i),x2(j));
-        v1(i,j) = p1(:)'*bphi(x1(i),x2(j));
-        k1(i,j) = norm([Kold(1,:)*sigma(x1(i),x2(j)), ...
-                  Kold(2,:)*sigma(x1(i),x2(j))]);
-        kn(i,j) = norm([Kold(1,:)*sigma(x1(i),x2(j)), ...
-                  Kold(2,:)*sigma(x1(i),x2(j))]);
+        vn(i,j) = p(:)'*LocalQuadPhiX(x1(i),x2(j));
+        v1(i,j) = p1(:)'*LocalQuadPhiX(x1(i),x2(j));
+        k1(i,j) = norm([K_old(1,:)*LocalPlantMono(x1(i),x2(j)), ...
+                  K_old(2,:)*LocalPlantMono(x1(i),x2(j))]);
+        kn(i,j) = norm([Knew(1,:)*LocalPlantMono(x1(i),x2(j)), ...
+                  Knew(2,:)*LocalPlantMono(x1(i),x2(j))]);
     end
 end
 surf(x1,x2,vn')
@@ -397,15 +410,12 @@ annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
 hFigs = [h1;h2;h3];
 end
 
-function y = phi(x1,x2)
-y = [x1;
-    x2;
-    x1*x1;
-    x1*x2;
-    x2*x2];
-end
+%% The following are Basic Minomial Functions
 
-function y = sigma(x1,x2)
+% Basis for system dynamics and controller
+% dx = F*sigma + G*u
+% u = K*sigma;
+function y = LocalPlantMono(x1,x2)
 y = [x1;
     x2;
     x1*x1;
@@ -416,8 +426,8 @@ y = [x1;
     x1*x2*x2;
     x2*x2*x2];
 end
-
-function y = bphi(x1,x2)
+% Basis for V(x)
+function y = LocalQuadPhiX(x1,x2)
 y = [x1*x1;
     x1*x2;
     x2*x2;
@@ -431,8 +441,8 @@ y = [x1*x1;
     x1*x2*x2*x2;
     x2*x2*x2*x2;];
 end
-
-function y = bsigma(x1,x2)
+% Basis for the generalized HJ
+function y = LocalQuadPlatMono(x1,x2)
 y = [x1*x1;
     x1*x2;
     x2*x2;
@@ -458,5 +468,4 @@ y = [x1*x1;
     x1*x1*x2*x2*x2*x2;
     x1*x2*x2*x2*x2*x2;
     x2*x2*x2*x2*x2*x2];
-
 end
