@@ -1,15 +1,32 @@
 function SimResults = GADP_invertedpendulum_main()
+% Demo for Global Adaptive Dynamic Programming for Continuous-time
+% Nonlinear Systems, by Yu Jiang and Zhong-Ping
+% Jiang, IEEE Transasctions on Automatic Control, 2015
+%
+% This paper can be found at 
+% 1. http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7063901
+% 2. http://arxiv.org/pdf/1401.0020.pdf
+%
+% System requirements:
+% - MATLAB (Manually Tested in MATLAB R2014b)
+% - MATLAB Symbolic Toolbox
+% - CVX (free to download at http://cvxr.com/cvx/)
+%
+% Copyright 2015 Yu Jiang 
+% 
+% Contact: yu.jiang@nyu.edu (Yu Jiang)
+
 SimResults = [];
-k = 1;
-m = 1;
-l = 1;
-g = 9.8;
+k = 1;   
+m = 1;   % Mass of the pendulum
+l = 1;   % Length of the pendulum
+g = 9.8; % Gravity accelaration rate
 Params.F = [0    1     0  ;   0   -k*l/m g ];
 Params.G = [0; 1/m];
-Params.Q = diag([10 10 0]);
-Params.R = 1;
+Params.Q = diag([10 10 0]);   % Weighting matrix
+Params.R = 1;                 % Weighting matrix
 Params.Noise = 1;
-x = [-1.5 1]; % Initial Contidition;
+x = [-1.5 1];       % Initial Contidition;
 Params.x0 = x;
 
 K = [-10 -1 -15];   % Initial Feedback gains
@@ -18,21 +35,21 @@ Ksave = K;
 xsave = [];
 tsave = [];
 
-T = 0.01;
-P_old = 1000*eye(2);
+T = 0.01;            % Length of time interval for data collection
+P_old = 1000*eye(2); % Initializing the previous Value function
+P = 0.9*P_old;       % Initialize the current Value function
+c = [1 0 1];         % Coefficient for SOS policy iteration
 
-% %for i=0:5
-i = 0;
-K_old = -100*[1 1 1];
-c = [1 0 1];
-
-while norm(K_old - K)> 0.5;
-    
+NumDataIntv  = 50;
+Iter = 0;
+Tol = 0.1;
+while norm(P_old - P)> Tol
+    P_old = P;
     % Online Simulation for Data collection
     Theta = []; Xi = []; Phi = [];  % Data matrices
-    for j=0:49
+    for IterIntv = 0:NumDataIntv - 1
         [t,x] = ode45(@(t,x) LocalInvertedPendulumSysWrapper(t,x,K,Params), ...
-            [j*T,j*T+T]+50*i*T,...
+            ([IterIntv, IterIntv + 1] + NumDataIntv * Iter) * T,...
             [x(end,1:2) zeros(1,10)]);
         Theta = [Theta; x(end,1)^2-x(1,1)^2 x(end,1)*x(end,2)-x(1,1)*x(1,2) x(end,2)^2-x(1,2)^2];
         Phi = [Phi; x(end,3:8) -2*x(end,9:11)];
@@ -47,8 +64,7 @@ while norm(K_old - K)> 0.5;
     % Save results
     Psave = [Psave; P(:)'];
     Ksave = [Ksave; K(:)'];
-    i = i+1;
-    P_old = P;
+    Iter = Iter + 1;
 end
 Params.Noise = 0;
 
@@ -171,7 +187,6 @@ x1 = -2:0.2:2;
 x2 = -5:0.5:5;
 vn = zeros(length(x1),length(x2));
 v1 = zeros(length(x1),length(x2));
-vs = [];us = [];un = [];
 P1 = [Psave(1,1) Psave(1,2);Psave(1,3) Psave(1,4)] ;
 for i=1:length(x1)
     for j=1:length(x2)
@@ -184,7 +199,6 @@ surf(x1,x2,vn')
 hold on
 surf(x1,x2,v1')
 hold off
-y=[-1 0 zeros(1,10)];
 xlabel('x_1')
 ylabel('x_2')
 

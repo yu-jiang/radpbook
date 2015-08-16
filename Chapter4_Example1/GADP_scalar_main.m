@@ -3,6 +3,10 @@ function SimResults = GADP_scalar_main()
 % Nonlinear Systems, by Yu Jiang and Zhong-Ping
 % Jiang, IEEE Transasctions on Automatic Control, 2015
 %
+% This paper can be found at 
+% 1. http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7063901
+% 2. http://arxiv.org/pdf/1401.0020.pdf
+%
 % System requirements:
 % - MATLAB (Manually Tested in MATLAB R2014b)
 % - MATLAB Symbolic Toolbox
