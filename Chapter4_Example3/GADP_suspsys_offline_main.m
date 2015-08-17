@@ -78,7 +78,7 @@ Vnew = V_;
 
 %%
 % Post-processing results
-x0 = [0.05,0,0,0];  % Iniial Condition
+x0 = [0,0,0,0];  % Iniial Condition
 tIntv = [0 3];
 [t1,y1] = ode23s(@(t,x) LocalSuspSys(t,x,u), [0 3], x0);
 [t,y] = ode23s(@(t,x) LocalSuspSys(t,x,0), tIntv, x0);
@@ -177,8 +177,8 @@ if ~isdouble(u)
     u = eval(u);
 end
     
-if t <= 0.1
-    r = 0.1;
+if t <= 0.001
+    r = 10;
 else
     r = 0;
 end
