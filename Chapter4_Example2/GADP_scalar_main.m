@@ -118,9 +118,10 @@ plot(SimResults.Tsave, SimResults.Xsave, 'b-', ...  % Learned
      t0,y0, 'r-.', ...                              % Unlearned
      'linewidth', 2)                         
 axis([0 50 -.5 2])
-legend('With GADP-based controller', 'With initial controller')
+myLegend = legend('With GADP-based controller', 'With initial controller');
+set(myLegend, 'Fontsize', 12);
 xlabel('time (sec)', 'FontSize', 12)
-ylabel('x', 'FontSize', 12)
+%ylabel('x', 'FontSize', 12)
 
 % Create textarrows
 annotation(hFig1,'textarrow', ...
@@ -200,7 +201,7 @@ end
 
 hFig3 = figure(3);
 plot(x,v1,'g:',x,vn,'r-.',x,vs,'b','linewidth',2)
-myLegend = legend('V_1 : Initial cost', 'V^4: Improved cost', ...
+myLegend = legend('V_1 : Initial cost', 'V_4: Improved cost', ...
     'V^o: Optimal cost');
 set(myLegend, 'FontSize', 12);
 xlabel('x', 'FontSize', 12)
@@ -210,7 +211,7 @@ xlabel('x', 'FontSize', 12)
 hFig4 = figure(4);
 plot(x,u1,'g:',x,un,'r-.',x,us,'b','linewidth',2)
 myLegend = legend('u_1: Initial control policy', ...
-    'u^4: Improved control policy', ...
+    'u_4: Improved control policy', ...
     'u^o: Optimal control policy');
 set(myLegend, 'FontSize', 12);
 xlabel('x', 'FontSize', 12)
