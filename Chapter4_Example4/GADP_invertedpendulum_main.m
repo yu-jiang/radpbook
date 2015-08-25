@@ -80,6 +80,7 @@ SimResults.tsave = tsave;
 SimResults.Psave = Psave;
 SimResults.Ksave = Ksave;
 SimResults.P = P;
+SimResults.Iter = Iter;
 
 % Plot results
 LocalPostProcessData(Params,SimResults);

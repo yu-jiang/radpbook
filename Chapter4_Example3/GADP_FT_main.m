@@ -37,7 +37,6 @@ Params.Gu = [0 0.5; 0.5 0.5]; % Upper Bound of G
 % Initialize the value function
 p = LocalInitialValueControlPair(Params);
 p_old = ones(size(p))*100; 
-p1 = p_old; % for the purpose of plotting.
 
 x0 =[1 -2]; % Initial Condition
 X = x0;
@@ -46,7 +45,7 @@ X = x0;
 IterMax = 7;        %Max iterations
 T = 0.02;           %Length of interval for data collection
 NumIntervals = 200; %Number of intervals for one interation 
-tol_conv = 0.001;   %Convergence criterion
+tol_conv = 0.0001;   %Convergence criterion
 
 % Compute the objective function for SOSs in Poilcy Iteration
 x1min = -0.1;
@@ -85,7 +84,7 @@ SimResults.tsave = tsave;
 
 % Generate figures
 SimResults.hFigs = LocalPostProcess(Params, ...
-    t, Xsave, tsave, p, p1, K_old,K, numAIter);
+    t, Xsave, tsave, p, psave(1,:), K_old,K, numAIter);
 end
 
 
@@ -384,11 +383,11 @@ view(gca,[-40.5 14]);
 annotation(gcf,'textarrow',[0.216071428571429 0.174535137214669],...
     [0.845238095238095 0.731440045897881], ...
     'TextEdgeColor','none','FontSize',12,...
-    'String',{'V_0(x1,x2,0)'});
+    'String',{'V_0(x1,x2)'});
 annotation(gcf,'textarrow',[0.132142857142857 0.159949345986154],...
     [0.140476190476191 0.257882960413087], ...
     'TextEdgeColor','none','FontSize',12,...
-    'String',{sprintf('V_%d(x1,x2,0)',numAIter)});
+    'String',{sprintf('V_%d(x1,x2)',numAIter)});
 
 % Figure 3. Plot the control curve
 h3 = figure(3);
