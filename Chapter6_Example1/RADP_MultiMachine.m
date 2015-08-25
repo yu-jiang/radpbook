@@ -160,19 +160,42 @@ function Local_plot(t,y,dlt0)
 figure(1)
 subplot(311)
 plot(t,(y(:,1)+dlt0(2))*180/pi,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Angle of G2 (dgree)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Angle of G2 (dgree)');
+set(l, 'FontSize', 12)
 axis([0 15 0 200])
 subplot(312)
 plot(t,(y(:,4)+dlt0(3))*180/pi,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Angle of G3 (dgree)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Angle of G3 (dgree)');
+set(l, 'FontSize', 12)
 axis([0 15 0 200])
 subplot(313)
 plot(t,(y(:,7)+dlt0(4))*180/pi,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Angle of G4 (dgree)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Angle of G4 (dgree)');
+set(l, 'FontSize', 12)
 axis([0 15 50 65])
+annotation(figure(1),'textarrow',[0.424517593643587 0.398365782488103],...
+	[0.16729088639201 0.189882327941137],'String',{'Controller Updated'},...
+	'FontSize',12);
+annotation(figure(1),'textarrow',[0.425440032308299 0.399288221152816],...
+	[0.460015659616231 0.482607101165358],'String',{'Controller Updated'},...
+	'FontSize',12);
+annotation(figure(1),'textarrow',[0.426787741203178 0.400635930047695],...
+	[0.762796504369538 0.785387945918666],'String',{'Controller Updated'},...
+	'FontSize',12);
+annotation(figure(1),'textarrow',[0.208516886930984 0.190650614335506],...
+	[0.874592833876222 0.84401986774277],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+annotation(figure(1),'textarrow',[0.204111600587371 0.186245327991894],...
+	[0.570032573289903 0.539459607156451],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+annotation(figure(1),'textarrow',[0.209985315712188 0.19211904311671],...
+	[0.27198697068404 0.241414004550588],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+
+
 
 figure(2)
 subplot(311)
@@ -214,21 +237,41 @@ axis([0 15 40 100])
 figure(4)
 subplot(311)
 plot(t,y(:,2)*2/pi+50,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Frequency of G2 (Hz)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Frequency of G2 (Hz)');
+set(l, 'FontSize', 12)
 axis([0 15 -10+50 10+50])
 subplot(312)
 plot(t,y(:,5)*2/pi+50,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Frequency of G3 (Hz)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Frequency of G3 (Hz)');
+set(l, 'FontSize', 12)
 axis([0 15 -10+50 10+50])
 subplot(313)
 % plot the angles
 plot(t,y(:,8)*2/pi+50,'b','linewidth',2)
-xlabel('Time(sec)')
-legend('Frequency of G4 (Hz)')
+xlabel('Time(sec)', 'FontSize', 12)
+l = legend('Frequency of G4 (Hz)');
+set(l, 'FontSize', 12)
 axis([0 15 -.5+50 .5+50])
-
+annotation(figure(4),'textarrow',[0.219236209335219 0.182764994466165],...
+	[0.285714285714286 0.238495847775444],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+annotation(figure(4),'textarrow',[0.214449541284404 0.178980753001389],...
+	[0.58403869407497 0.536862481813178],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+annotation(figure(4),'textarrow',[0.198019801980198 0.18291746711841],...
+	[0.866666666666667 0.840668550794581],'String',{'Disturbance Injected'},...
+	'FontSize',12);
+annotation(figure(4),'textarrow',[0.437057991513437 0.402604606212398],...
+	[0.782539682539683 0.820868546955883],'String',{'Controller Updated'},...
+	'FontSize',12);
+annotation(figure(4),'textarrow',[0.427157001414427 0.401190179055397],...
+	[0.477777777777778 0.518496231645235],'String',{'Controller Updated'},...
+	'FontSize',12);
+annotation(figure(4),'textarrow',[0.432814710042433 0.400311028230748],...
+	[0.173015873015873 0.215895513808725],'String',{'Controller Updated'},...
+	'FontSize',12);
 
 figure(5)
 subplot(311)
@@ -296,7 +339,7 @@ BX=[0.2537    0.1875    0.0132    0.2967    0.2852    0.4848    0.2443    0.0908
     0.2149    0.2354    0.3280    0.4921    0.2433    0.3542    0.1437    0.1635    0.3644    0.2120
     0.2335    0.3819    0.4937    0.1255    0.3146    0.1356    0.5278    0.4432    0.2120    0.3681];
 
-GX=[2.1043    0.5194    0.0047    1.3971    0.4052   -0.1143    0.0088    2.8105   -0.7849   -0.0019
+GX=0.1*[2.1043    0.5194    0.0047    1.3971    0.4052   -0.1143    0.0088    2.8105   -0.7849   -0.0019
     0.5194    2.9397    0.3410    0.1829    1.2937   -1.7493   -0.0346   -0.0512   -1.0858   -0.3718
     0.0047    0.3410    1.5196    1.7842   -2.6536   -0.9942    1.5418   -0.4936    2.2536    2.7643
     1.3971    0.1829    1.7842    0.4805   -1.1049   -0.7318    2.2099   -1.1210    2.3378   -1.4679
@@ -306,8 +349,6 @@ GX=[2.1043    0.5194    0.0047    1.3971    0.4052   -0.1143    0.0088    2.8105
     2.8105   -0.0512   -0.4936   -1.1210   -1.9231    0.3602    0.6421    2.6875    1.3337    1.1306
     -0.7849   -1.0858    2.2536    2.3378    0.3224    1.1842    0.6078    1.3337    1.9344   -1.7285
     -0.0019   -0.3718    2.7643   -1.4679   -1.4969   -0.6656   -0.9809    1.1306   -1.7285    2.0532];
-
-GX=GX*0.1;
 
 A=zeros(3,3,Nm);
 B=zeros(3,1,Nm);
