@@ -1,24 +1,22 @@
-function dX=motor2D_lrn(t,X)
+function dX = armDynamics(X,K)
+
 para;
 
 global Kadp
 
-x=X(1:6);
+x = X(1:6);
 
-u=-Kadp*x;%+100*sin(10*t)+100*sin(0.1*t);
+u = -K*x; 
 
-w=randn(2,1)*sqrt(dt);
+w = randn(2,1)*sqrt(dt);
 
-M=[c1*u(1) c2*u(2); -c2*u(1) c1*u(2)];
+M = [c1*u(1) c2*u(2); -c2*u(1) c1*u(2)];
 
-v=M*w; % control dependent noise
+v = M*w; % Noise from CNS
 
-dx=A*x+B*u+B*v./dt; %6
-dIr=x'*Q1*x+u'*R*u;%kron(x,x); %1
-dIxu=kron(x,R*v)./dt; % 1 %12;
-dIuu=kron(v,v)./dt;         % 4
-dX=[dx;   %   6
-    dIr; %  1 36
-    dIxu; %   12
-    dIuu];%   4
+% External integrators for learning purpose
+dX = [A*x+B*u+B*v./dt;  % dim = 6 
+      x'*Q1*x+u'*R*u;   % dim = 1
+      kron(x,R*v)./dt;  % dim = 12
+      kron(v,v)./dt];   % dim = 4;
 end
