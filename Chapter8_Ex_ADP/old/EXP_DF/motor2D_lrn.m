@@ -1,4 +1,4 @@
-function dX = armDynamics(X,K)
+function dX = armDynamics(t,X)
 
 para;
 
@@ -6,7 +6,7 @@ global Kadp
 
 x = X(1:6);
 
-u = -K*x; 
+u = -Kadp*x; 
 
 w = randn(2,1)*sqrt(dt);
 
