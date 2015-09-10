@@ -1,10 +1,10 @@
-classdef MovementSimulator < handle
+classdef DFSimulator < handle
     
     properties
         tau = 0.05;
         m1 = 2;
         m2 = 2;
-       
+        
         c1 = 0.15/2;
         c2 = 0.05/2;
         dt = 0.005;
@@ -15,7 +15,7 @@ classdef MovementSimulator < handle
         Q0 = [500 0; 0 1000];
         Q;
         R = diag([0.01,0.01]);
-                  
+        
         K
         Ko
         K_
@@ -24,13 +24,17 @@ classdef MovementSimulator < handle
     
     % Public methods for interfacing
     methods
-        function this = MovementSimulator(ForceField)
-            Initialize(this, ForceField);
+        function this = DFSimulator()
+            Initialize(this);
         end
         
         function delete(this)
-            delete(figure(1));
-            delete(figure(2));
+            try
+                delete(figure(1));
+                delete(figure(2));
+                delete(figure(3));
+            catch
+            end
         end
         
         % Simulation for the NF
@@ -246,7 +250,7 @@ classdef MovementSimulator < handle
     
     % Private methods for internal use
     methods (Access = private)
-        function Initialize(this, ForceField)
+        function Initialize(this)
             
             this.A0 = [0 0 1        0      0      0;
                 0 0 0        1      0      0;
@@ -255,28 +259,21 @@ classdef MovementSimulator < handle
                 0 0 0        0      -1/this.tau 0;
                 0 0 0        0      0      -1/this.tau];
             
-            switch ForceField
-                case 'DF'
-                    this.A = this.A0 + [zeros(2,6);
-                        150/this.m1  zeros(1,5);
-                        zeros(3,6)];
-                    theta = 0*15/180*pi;
-                    theta1 = 0/180*pi;
-                    Qc1 = this.Q0+ 1e4*[0.03 0; 0 0];
-                    Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-                case 'VF'
-                    kai = 0.7;
-                    d11 = 13*kai;
-                    d12 = -18*kai;
-                    d21 = 18*kai;
-                    d22 = 13*kai;
-                    this.A = this. A0 +[zeros(2,6);
-                        zeros(2) [d11/this.m1 d12/this.m1; d21/this.m2 d22/this.m2] zeros(2);
-                        zeros(2,6)];
-                    Qc1 = 1500*[cos(theta1)*cos(theta1) cos(theta1)*sin(theta1); ...
-                        cos(theta1)*sin(theta1) sin(theta1)*sin(theta1)]+Q0;
-                    Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-            end
+            
+            this.A = this.A0 + [zeros(2,6);
+                150/this.m1  zeros(1,5);
+                zeros(3,6)];
+            theta = 0*15/180*pi;
+            theta1 = 0/180*pi;
+            Qc1 = this.Q0+ 1e4*[0.03 0; 0 0];
+            Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
+            
+            kai=.7;
+            d11=13*kai;
+            d12=-18*kai;
+            d21=18*kai;
+            d22=13*kai;
+            
             
             this.B = [0 0;
                 0 0;
@@ -290,8 +287,8 @@ classdef MovementSimulator < handle
             
             TM1 = [cos(theta1) -sin(theta1); sin(theta1) cos(theta1)];
             Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-            this.R = TM1'*this.R*TM1;            
-            this.K_ = lqr(this.A0, this.B, this.Q, this.R);            
+            this.R = TM1'*this.R*TM1;
+            this.K_ = lqr(this.A0, this.B, this.Q, this.R);
             this.Ko = lqr(this.A,this.B,Q1,this.R);
             this.K = this.K_;
         end

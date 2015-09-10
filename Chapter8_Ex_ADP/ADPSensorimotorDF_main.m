@@ -1,5 +1,5 @@
 close all
-M = MovementSimulator('DF');
+M = DFSimulator();
 simNF(M);
 simDF(M);
 simAL(M);
