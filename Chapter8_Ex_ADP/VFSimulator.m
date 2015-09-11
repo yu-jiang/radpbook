@@ -54,9 +54,8 @@ classdef VFSimulator < handle
         % Simulation for learning from unstable to stable during the
         % initial exposure in the VF
         function simVF(this)
-            if this.status == 1;
-                this.reset();
-            end
+            this.reset();
+            this.status = 0;
             [t1,y1] = LocalSDESolver(0,2,[0.001,-.25,0,0,0,0,zeros(1,12+1+4)]',this,1);
             % after the first trial, the CNS directly increase the stiffness
             % to formulate a new control policy which is also the initial
@@ -78,14 +77,7 @@ classdef VFSimulator < handle
             disp('Simulating the 5th trial...')
             [~,x_save,t_save] = simMoveNLearn(this);
             t5 = t_save(:); y5 = x_save(:,1:6);
-            
-%             % Trim trajectories
-%             [t1,y1] = trimTraj(t1,y1);
-%             [t2,y2] = trimTraj(t2,y2);
-%             [t3,y3] = trimTraj(t3,y3);
-%             [t4,y4] = trimTraj(t4,y4);
-%             [t5,y5] = trimTraj(t5,y5);
-            
+          
             updateFigure(t1,t2,t3,t4,t5, ...
                 y1, y2, y3, y4, y5, 'VF');
         end
@@ -141,18 +133,18 @@ classdef VFSimulator < handle
         
         function simAL(this)
             if this.status == 0;
-                % Make 30 trials to learn
-                for ct = 1:30
+                % Make 25 trials to learn
+                for ct = 1:25
                     simMoveNLearn(this)
                 end
                 this.status = 1;
             end
             
-            [t1,y1] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
-            [t2,y2] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
-            [t3,y3] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
-            [t4,y4] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
-            [t5,y5] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
+            [t1,y1] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
+            [t2,y2] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
+            [t3,y3] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
+            [t4,y4] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
+            [t5,y5] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
             updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AL');
         end
         
@@ -165,11 +157,11 @@ classdef VFSimulator < handle
                 this.status = 1;
             end
             
-            [t1,y1] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
-            [t2,y2] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
-            [t3,y3] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
-            [t4,y4] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
-            [t5,y5] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
+            [t1,y1] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
+            [t2,y2] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
+            [t3,y3] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
+            [t4,y4] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
+            [t5,y5] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
             updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AE');
         end
         
@@ -396,7 +388,7 @@ switch expStage
             y5(:,1),y5(:,2), 'b-')
         hold off
         axis equal
-        axis([-0.12 0.08 -0.3 .1])
+        axis([-0.15 0.05 -0.3 .1])
         xlabel('x-position (m)')
         ylabel('y-position (m)')
         title('B')
@@ -411,7 +403,7 @@ switch expStage
             y5(:,1),y5(:,2), 'b-')
         hold off
         axis equal
-        axis([-0.01 0.1 -0.3 0.1])
+        axis([-0.1 0.1 -0.3 0.1])
         title('C')
         xlabel('x-position (m)')
     case 'AE'
@@ -426,7 +418,7 @@ switch expStage
             y5(:,1),y5(:,2), 'b-')
         hold off
         axis equal
-        axis([-0.01 0.1 -0.3 0.1])
+        axis([-0.1 0.1 -0.3 0.1])
         title('D')
         xlabel('x-position (m)')
 end
