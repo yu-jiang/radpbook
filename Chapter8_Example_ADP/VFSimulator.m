@@ -1,4 +1,4 @@
-classdef VFSimulator < handle
+classdef VFSimulator < AbstractSimulator
     
     properties
         tau = 0.05;
@@ -251,6 +251,16 @@ classdef VFSimulator < handle
             
         end
         
+        function Tend = getPostLearningMovementDuration(this, r)
+            assert(this.status == 1, 'The method can only be called when learning is finished');
+            [t,y] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
+            ct = length(t);
+            while norm(y(ct,1:2))<r
+                ct = ct-1;
+            end
+            Tend = t(ct);
+        end
+        
     end
     
     
@@ -436,14 +446,16 @@ switch expStage
         xlabel('time (s)')
         ylabel('x-velocity (m/s)')
         title('A')
-        axis([0 0.6 -0.5 0.5])
+        % axis([0 0.6 -0.5 0.5])
+        xlim([0 0.6])
         subplot(4, 4, 4 + 1)
         plot(t1,y1(:,4),'b-', ...
             t2,y2(:,4),'b-', ...
             t3,y3(:,4),'b-', ...
             t4,y4(:,4),'b-', ...
             t5,y5(:,4),'b-')
-        axis([0 0.6 -.5 1.5])
+        % axis([0 0.6 -.5 1.5])
+        xlim([0 0.6])
         xlabel('time (s)')
         ylabel('y-velocity (m/s)')
         subplot(4,4,8 + 1)
@@ -454,14 +466,16 @@ switch expStage
             t5,y5(:,5),'b-')
         xlabel('time (s)')
         ylabel('x-endpoint force (N)')
-        axis([0 0.6 -15 15])
+        % axis([0 0.6 -15 15])
+        xlim([0 0.6])
         subplot(4,4,12 + 1)
         plot(t1,y1(:,6),'b-', ...
             t2,y2(:,6),'b-', ...
             t3,y3(:,6),'b-', ...
             t4,y4(:,6),'b-', ...
             t5,y5(:,6),'b-')
-        axis([0 0.6 -30 30])
+        %axis([0 0.6 -30 30])
+         xlim([0 0.6])
         xlabel('time (s)')
         ylabel('y-endpoint force (N)')
     case 'VF'
@@ -473,14 +487,16 @@ switch expStage
             t5,y5(:,3),'b-')
         xlabel('time (s)')
         title('B')
-        axis([0 0.6 -0.5 0.5])
+        % axis([0 0.6 -0.5 0.5])
+        xlim([0 0.6]);
         subplot(4, 4, 4 + 2)
         plot(t1,y1(:,4),'b-', ...
             t2,y2(:,4),'b-', ...
             t3,y3(:,4),'b-', ...
             t4,y4(:,4),'b-', ...
             t5,y5(:,4),'b-')
-        axis([0 0.6 -.5 1.5])
+        %axis([0 0.6 -.5 1.5])
+        xlim([0 0.6]);
         xlabel('time (s)')
         subplot(4,4,8 + 2)
         plot(t1,y1(:,5),'b-', ...
@@ -489,14 +505,16 @@ switch expStage
             t4,y4(:,5),'b-', ...
             t5,y5(:,5),'b-')
         xlabel('time (s)')
-        axis([0 0.6 -15 15])
+        %axis([0 0.6 -15 15])
+        xlim([0 0.6]);
         subplot(4,4,12 + 2)
         plot(t1,y1(:,6),'b-', ...
             t2,y2(:,6),'b-', ...
             t3,y3(:,6),'b-', ...
             t4,y4(:,6),'b-', ...
             t5,y5(:,6),'b-')
-        axis([0 0.6 -30 30])
+        % axis([0 0.6 -30 30])
+        xlim([0 0.6]);
         xlabel('time (s)')
     case 'AL'
         subplot(4,4,3)
@@ -507,7 +525,8 @@ switch expStage
             t5,y5(:,3),'b-')
         xlabel('time (s)')
         title('C')
-        axis([0 0.6 -0.5 .5])
+        % axis([0 0.6 -0.5 .5])
+        xlim([0 0.6]);
         subplot(4,4,3+4)
         plot(t1,y1(:,4),'b-', ...
             t2,y2(:,4),'b-', ...
@@ -515,7 +534,8 @@ switch expStage
             t4,y4(:,4),'b-', ...
             t5,y5(:,4),'b-')
         xlabel('time (s)')
-        axis([0 0.6 -0.5 1.5])
+        % axis([0 0.6 -0.5 1.5])
+         xlim([0 0.6])
         subplot(4,4,3+4+4)
         plot(t1,y1(:,5),'b-', ...
             t2,y2(:,5),'b-', ...
@@ -523,15 +543,16 @@ switch expStage
             t4,y4(:,5),'b-', ...
             t5,y5(:,5),'b-')
         xlabel('time (s)')
-        axis([0 0.6 -15 15])
-        
+        % axis([0 0.6 -15 15])
+        xlim([0 0.6])
         subplot(4,4,3+4*3)
         plot(t1,y1(:,6),'b-', ...
             t2,y2(:,6),'b-', ...
             t3,y3(:,6),'b-', ...
             t4,y4(:,6),'b-', ...
             t5,y5(:,6),'b-')
-        axis([0 0.6 -30 30])
+       % axis([0 0.6 -30 30])
+        xlim([0 0.6])
         xlabel('time (s)')
         
     case 'AE'
@@ -543,7 +564,8 @@ switch expStage
             t5,y5(:,3),'b-')
         xlabel('time (s)')
         title('D')
-        axis([0 0.6 -0.5 .5])
+        xlim([0 0.6])
+        % axis([0 0.6 -0.5 .5])
         subplot(4,4,4+4)
         plot(t1,y1(:,4),'b-', ...
             t2,y2(:,4),'b-', ...
@@ -551,7 +573,8 @@ switch expStage
             t4,y4(:,4),'b-', ...
             t5,y5(:,4),'b-')
         xlabel('time (s)')
-        axis([0 0.6 -0.5 1.5])
+        % axis([0 0.6 -0.5 1.5])
+        xlim([0 0.6])
         subplot(4,4,4+4+4)
         plot(t1,y1(:,5),'b-', ...
             t2,y2(:,5),'b-', ...
@@ -559,14 +582,16 @@ switch expStage
             t4,y4(:,5),'b-', ...
             t5,y5(:,5),'b-')
         xlabel('time (s)')
-        axis([0 0.6 -15 15])
+        % axis([0 0.6 -15 15])
+        xlim([0 0.6])
         subplot(4,4,4+4*3)
         plot(t1,y1(:,6),'b-', ...
             t2,y2(:,6),'b-', ...
             t3,y3(:,6),'b-', ...
             t4,y4(:,6),'b-', ...
             t5,y5(:,6),'b-')
-        axis([0 0.6 -30 30])
+        % axis([0 0.6 -30 30])
+        xlim([0 0.6])
         xlabel('time (s)')
 end
 end
