@@ -1,21 +1,14 @@
 classdef VFSimulator < AbstractSimulator
+% Class for movement simulation in Velocity-depedent field. 
+% Author: Yu Jiang
+% Contact: yu.jiang@nyu.edu
+% Copyright 2015 Yu Jiang
     
-    properties
-        tau = 0.05;
-        m1 = 2;
-        m2 = 2;
-        
-        c1 = 0.15/2;
-        c2 = 0.05/2;
-        dt = 0.005;
-        
-        A0
-        A
-        B
-        Q0 = [500 0; 0 1000];
+    properties      
+ 
+
         Q;
         Q1
-        R = diag([0.01,0.01]);
         
         K
         Ko
@@ -29,26 +22,26 @@ classdef VFSimulator < AbstractSimulator
             Initialize(this);
         end
         
-        function delete(this)
-            try
-                delete(figure(1));
-                delete(figure(2));
-                delete(figure(3));
-            catch
-            end
-        end
+%         function delete(this)
+%             try
+%                 delete(this.fig1);
+%                 delete(this.fig2);
+%                 delete(this.fig3);
+%             catch
+%             end
+%         end
         
         % Simulation for the NF
         function simNF(this)
-           % if this.status == 1;
-                this.reset();
-           % end
+            % if this.status == 1;
+            this.reset();
+            % end
             [t1,y1] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
             [t2,y2] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
             [t3,y3] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
             [t4,y4] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
             [t5,y5] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
-            updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'NF');
+            updateFigure(this, t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'NF');
         end
         
         % Simulation for learning from unstable to stable during the
@@ -60,7 +53,7 @@ classdef VFSimulator < AbstractSimulator
             % after the first trial, the CNS directly increase the stiffness
             % to formulate a new control policy which is also the initial
             % control policy to perform ADP
-                
+            
             this.K = 3*this.K;
             disp('Simulating the 2nd trial...')
             [~,x_save,t_save] = simMoveNLearn(this);
@@ -77,8 +70,8 @@ classdef VFSimulator < AbstractSimulator
             disp('Simulating the 5th trial...')
             [~,x_save,t_save] = simMoveNLearn(this);
             t5 = t_save(:); y5 = x_save(:,1:6);
-          
-            updateFigure(t1,t2,t3,t4,t5, ...
+            
+            updateFigure(this, t1,t2,t3,t4,t5, ...
                 y1, y2, y3, y4, y5, 'VF');
         end
         
@@ -87,9 +80,9 @@ classdef VFSimulator < AbstractSimulator
             N = 400; %length of the window, should be at least greater than xn^2
             NN = 4;  %max iteration times
             T = 0.001;
-            dt_ = this.dt; % Save the previous time step and restore later
+            
             this.dt = 0.0005; % period to data recording
-            x_save=[];t_save=[];
+            x_save = [];t_save=[];
             X = [0,-0.25,0,0,0,0,zeros(1,12+1+4)];
             Dxx = [];
             Iq = [];
@@ -123,10 +116,10 @@ classdef VFSimulator < AbstractSimulator
             P = (P+P')/2;
             
             this.K = [pp(22:2:32)';pp(23:2:33)'];
-            this.dt = dt_;
+            this.dt = this.dt_;
             K = this.K;
-           %% simulate the rest part of the movement
-            [t,X] = LocalSDESolver(t(end),1, X(end,:)',this, true);            
+            %% simulate the rest part of the movement
+            [t,X] = LocalSDESolver(t(end),1, X(end,:)',this, true);
             x_save = [x_save;X];
             t_save = [t_save;t'];
         end
@@ -135,7 +128,7 @@ classdef VFSimulator < AbstractSimulator
             if this.status == 0;
                 % Make 25 trials to learn
                 for ct = 1:25
-                    simMoveNLearn(this)
+                    simMoveNLearn(this);
                 end
                 this.status = 1;
             end
@@ -145,7 +138,7 @@ classdef VFSimulator < AbstractSimulator
             [t3,y3] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
             [t4,y4] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
             [t5,y5] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
-            updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AL');
+            updateFigure(this, t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AL');
         end
         
         function simAE(this)
@@ -162,7 +155,7 @@ classdef VFSimulator < AbstractSimulator
             [t3,y3] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
             [t4,y4] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
             [t5,y5] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
-            updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AE');
+            updateFigure(this, t1, t2, t3, t4, t5, y1, y2, y3, y4, y5, 'AE');
         end
         
         function reset(this)
@@ -182,14 +175,15 @@ classdef VFSimulator < AbstractSimulator
             xy1 = (Kxy1)*[x;y];
             xy2 = (Kxy2)*[x;y];
             
-            figure(3)
+            this.fig3.Visible = 'on';
+            set(0, 'CurrentFigure', this.fig3);
             plot(xy1(1,:),xy1(2,:),'g',xy2(1,:),xy2(2,:),'r','Linewidth',2);
             axis equal
             axis([-1200 1200 -1000 1000])
             xlabel('x component of stiffness (N m^{-1})')
             ylabel('y component of stiffness (N m^{-1})')
             
-            figure1 = figure(3);
+            figure1 = this.fig3;
             annotation(figure1,'textbox',...
                 [0.312564059900167 0.709265175718848 0.166637271214642 0.135463258785942],...
                 'String',{'Divergent force filed'},...
@@ -253,7 +247,7 @@ classdef VFSimulator < AbstractSimulator
         
         function Tend = getPostLearningMovementDuration(this, r)
             assert(this.status == 1, 'The method can only be called when learning is finished');
-            [t,y] = LocalSDESolver(0,1,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
+            [t,y] = LocalSDESolver(0,2,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,0);
             ct = length(t);
             while norm(y(ct,1:2))<r
                 ct = ct-1;
@@ -268,19 +262,13 @@ classdef VFSimulator < AbstractSimulator
     methods (Access = private)
         function Initialize(this)
             
-            this.A0 = [0 0 1        0      0      0;
-                0 0 0        1      0      0;
-                0 0 0        0     1/this.m1    0;
-                0 0 0        0      0      1/this.m2;
-                0 0 0        0      -1/this.tau 0;
-                0 0 0        0      0      -1/this.tau];
-            
+            this.dt = this.dt_;            
             kai = 0.7;
             d11 = 13*kai;
             d12 = -18*kai;
             d21 = 18*kai;
             d22 = 13*kai;
-
+            
             this.A = this.A0 + blkdiag(zeros(2), ...
                 [d11/this.m1 d12/this.m1; d21/this.m2 d22/this.m2], ...
                 zeros(2));
@@ -289,21 +277,255 @@ classdef VFSimulator < AbstractSimulator
             Qc1 = 1500*[cos(theta1)*cos(theta1) cos(theta1)*sin(theta1); ...
                 cos(theta1)*sin(theta1) sin(theta1)*sin(theta1)]+this.Q0;
             this.Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-            this.B = [0 0;
-                0 0;
-                0 0;
-                0 0;
-                1/this.tau 0;
-                0 1/this.tau];
+%             this.B = [0 0;
+%                 0 0;
+%                 0 0;
+%                 0 0;
+%                 1/this.tau 0;
+%                 0 1/this.tau];
             
             Qc = this.Q0;
             this.Q = blkdiag(Qc,0.01*Qc,0.00005*Qc);
-
+            
             this.K_ = lqr(this.A0, this.B, this.Q, this.R);
             this.Ko = lqr(this.A,this.B,this.Q1,this.R);
             this.K = this.K_;
+            
+            
+            this.fig1 = figure('Visible', 'off');
+            this.fig2 = figure('Visible', 'off');
+            this.fig3 = figure('Visible', 'off');
         end
         
+        
+        function updateFigure(this, t1, t2, t3, t4, t5, y1, y2, y3, y4 ,y5, expStage)
+            this.fig1.Visible = 'on';
+            set(0,'CurrentFigure',this.fig1);
+            switch expStage
+                case 'NF'
+                    subplot(1,4,1)
+                    fCirc([0,0],0.01,1000,'r');
+                    hold on
+                    plot(y1(:,1),y1(:,2), 'b-', ...
+                        y2(:,1),y2(:,2), 'b-', ...
+                        y3(:,1),y3(:,2), 'b-', ...
+                        y4(:,1),y4(:,2), 'b-', ...
+                        y5(:,1),y5(:,2), 'b-')
+                    hold off
+                    axis equal
+                    axis([-0.1 0.1 -0.3 0.1])
+                    xlabel('x-position (m)')
+                    ylabel('y-position (m)')
+                    title('A')
+                case 'VF'
+                    subplot(1,4,2)
+                    fCirc([0,0],0.01,1000,'r');
+                    hold on
+                    plot(y1(:,1),y1(:,2), 'r-', ...
+                        y2(:,1),y2(:,2), 'g-', ...
+                        y3(:,1),y3(:,2), 'm-', ...
+                        y4(:,1),y4(:,2), 'k-', ...
+                        y5(:,1),y5(:,2), 'b-')
+                    hold off
+                    axis equal
+                    axis([-0.15 0.05 -0.3 .1])
+                    xlabel('x-position (m)')
+                    ylabel('y-position (m)')
+                    title('B')
+                case 'AL'
+                    subplot(143)
+                    fCirc([0,0],0.01,1000,'r');
+                    hold on
+                    plot(y1(:,1),y1(:,2), 'b-', ...
+                        y2(:,1),y2(:,2), 'b-', ...
+                        y3(:,1),y3(:,2), 'b-', ...
+                        y4(:,1),y4(:,2), 'b-', ...
+                        y5(:,1),y5(:,2), 'b-')
+                    hold off
+                    axis equal
+                    axis([-0.1 0.1 -0.3 0.1])
+                    title('C')
+                    xlabel('x-position (m)')
+                case 'AE'
+                    this.fig1
+                    subplot(144)
+                    fCirc([0,0],0.01,1000,'r');
+                    hold on
+                    plot(y1(:,1),y1(:,2), 'b-', ...
+                        y2(:,1),y2(:,2), 'b-', ...
+                        y3(:,1),y3(:,2), 'b-', ...
+                        y4(:,1),y4(:,2), 'b-', ...
+                        y5(:,1),y5(:,2), 'b-')
+                    hold off
+                    axis equal
+                    axis([-0.1 0.1 -0.3 0.1])
+                    title('D')
+                    xlabel('x-position (m)')
+            end
+            
+            this.fig2.Visible = 'on';
+            set(0,'CurrentFigure',this.fig2);
+            switch expStage
+                case 'NF'
+                    subplot(4, 4, 1)
+                    ylabel('y-endpoint force (N)')
+                    plot(t1,y1(:,3),'b-', ...
+                        t2,y2(:,3),'b-', ...
+                        t3,y3(:,3),'b-', ...
+                        t4,y4(:,3),'b-', ...
+                        t5,y5(:,3),'b-')
+                    xlabel('time (s)')
+                    ylabel('x-velocity (m/s)')
+                    title('A')
+                    % axis([0 0.6 -0.5 0.5])
+                    xlim([0 0.6])
+                    subplot(4, 4, 4 + 1)
+                    plot(t1,y1(:,4),'b-', ...
+                        t2,y2(:,4),'b-', ...
+                        t3,y3(:,4),'b-', ...
+                        t4,y4(:,4),'b-', ...
+                        t5,y5(:,4),'b-')
+                    % axis([0 0.6 -.5 1.5])
+                    xlim([0 0.6])
+                    xlabel('time (s)')
+                    ylabel('y-velocity (m/s)')
+                    subplot(4,4,8 + 1)
+                    plot(t1,y1(:,5),'b-', ...
+                        t2,y2(:,5),'b-', ...
+                        t3,y3(:,5),'b-', ...
+                        t4,y4(:,5),'b-', ...
+                        t5,y5(:,5),'b-')
+                    xlabel('time (s)')
+                    ylabel('x-endpoint force (N)')
+                    % axis([0 0.6 -15 15])
+                    xlim([0 0.6])
+                    subplot(4,4,12 + 1)
+                    plot(t1,y1(:,6),'b-', ...
+                        t2,y2(:,6),'b-', ...
+                        t3,y3(:,6),'b-', ...
+                        t4,y4(:,6),'b-', ...
+                        t5,y5(:,6),'b-')
+                    %axis([0 0.6 -30 30])
+                    xlim([0 0.6])
+                    xlabel('time (s)')
+                    ylabel('y-endpoint force (N)')
+                case 'VF'
+                    subplot(4, 4, 2)
+                    plot(t1,y1(:,3),'b-', ...
+                        t2,y2(:,3),'b-', ...
+                        t3,y3(:,3),'b-', ...
+                        t4,y4(:,3),'b-', ...
+                        t5,y5(:,3),'b-')
+                    xlabel('time (s)')
+                    title('B')
+                    % axis([0 0.6 -0.5 0.5])
+                    xlim([0 0.6]);
+                    subplot(4, 4, 4 + 2)
+                    plot(t1,y1(:,4),'b-', ...
+                        t2,y2(:,4),'b-', ...
+                        t3,y3(:,4),'b-', ...
+                        t4,y4(:,4),'b-', ...
+                        t5,y5(:,4),'b-')
+                    %axis([0 0.6 -.5 1.5])
+                    xlim([0 0.6]);
+                    xlabel('time (s)')
+                    subplot(4,4,8 + 2)
+                    plot(t1,y1(:,5),'b-', ...
+                        t2,y2(:,5),'b-', ...
+                        t3,y3(:,5),'b-', ...
+                        t4,y4(:,5),'b-', ...
+                        t5,y5(:,5),'b-')
+                    xlabel('time (s)')
+                    %axis([0 0.6 -15 15])
+                    xlim([0 0.6]);
+                    subplot(4,4,12 + 2)
+                    plot(t1,y1(:,6),'b-', ...
+                        t2,y2(:,6),'b-', ...
+                        t3,y3(:,6),'b-', ...
+                        t4,y4(:,6),'b-', ...
+                        t5,y5(:,6),'b-')
+                    % axis([0 0.6 -30 30])
+                    xlim([0 0.6]);
+                    xlabel('time (s)')
+                case 'AL'
+                    subplot(4,4,3)
+                    plot(t1,y1(:,3),'b-', ...
+                        t2,y2(:,3),'b-', ...
+                        t3,y3(:,3),'b-', ...
+                        t4,y4(:,3),'b-', ...
+                        t5,y5(:,3),'b-')
+                    xlabel('time (s)')
+                    title('C')
+                    % axis([0 0.6 -0.5 .5])
+                    xlim([0 0.6]);
+                    subplot(4,4,3+4)
+                    plot(t1,y1(:,4),'b-', ...
+                        t2,y2(:,4),'b-', ...
+                        t3,y3(:,4),'b-', ...
+                        t4,y4(:,4),'b-', ...
+                        t5,y5(:,4),'b-')
+                    xlabel('time (s)')
+                    % axis([0 0.6 -0.5 1.5])
+                    xlim([0 0.6])
+                    subplot(4,4,3+4+4)
+                    plot(t1,y1(:,5),'b-', ...
+                        t2,y2(:,5),'b-', ...
+                        t3,y3(:,5),'b-', ...
+                        t4,y4(:,5),'b-', ...
+                        t5,y5(:,5),'b-')
+                    xlabel('time (s)')
+                    % axis([0 0.6 -15 15])
+                    xlim([0 0.6])
+                    subplot(4,4,3+4*3)
+                    plot(t1,y1(:,6),'b-', ...
+                        t2,y2(:,6),'b-', ...
+                        t3,y3(:,6),'b-', ...
+                        t4,y4(:,6),'b-', ...
+                        t5,y5(:,6),'b-')
+                    % axis([0 0.6 -30 30])
+                    xlim([0 0.6])
+                    xlabel('time (s)')
+                    
+                case 'AE'
+                    subplot(4,4,4)
+                    plot(t1,y1(:,3),'b-', ...
+                        t2,y2(:,3),'b-', ...
+                        t3,y3(:,3),'b-', ...
+                        t4,y4(:,3),'b-', ...
+                        t5,y5(:,3),'b-')
+                    xlabel('time (s)')
+                    title('D')
+                    xlim([0 0.6])
+                    % axis([0 0.6 -0.5 .5])
+                    subplot(4,4,4+4)
+                    plot(t1,y1(:,4),'b-', ...
+                        t2,y2(:,4),'b-', ...
+                        t3,y3(:,4),'b-', ...
+                        t4,y4(:,4),'b-', ...
+                        t5,y5(:,4),'b-')
+                    xlabel('time (s)')
+                    % axis([0 0.6 -0.5 1.5])
+                    xlim([0 0.6])
+                    subplot(4,4,4+4+4)
+                    plot(t1,y1(:,5),'b-', ...
+                        t2,y2(:,5),'b-', ...
+                        t3,y3(:,5),'b-', ...
+                        t4,y4(:,5),'b-', ...
+                        t5,y5(:,5),'b-')
+                    xlabel('time (s)')
+                    % axis([0 0.6 -15 15])
+                    xlim([0 0.6])
+                    subplot(4,4,4+4*3)
+                    plot(t1,y1(:,6),'b-', ...
+                        t2,y2(:,6),'b-', ...
+                        t3,y3(:,6),'b-', ...
+                        t4,y4(:,6),'b-', ...
+                        t5,y5(:,6),'b-')
+                    % axis([0 0.6 -30 30])
+                    xlim([0 0.6])
+                    xlabel('time (s)')
+            end
+        end
         
     end
 end
@@ -360,238 +582,3 @@ h = fill(X,Y,color);
 axis square;
 end
 
-% Trim Trajectories
-function [t,y] = trimTraj(t,y)
-ct = 1;
-while abs(y(ct,1))<0.03 && norm(y(ct,1:2))>0.007 && (ct<length(y))
-    ct = ct +1;
-end
-y(ct+1:end,:) = []; t(ct+1:end) = [];
-end
-
-function updateFigure(t1, t2, t3, t4, t5, y1, y2, y3, y4 ,y5, expStage)
-figure(1)
-switch expStage
-    case 'NF'
-        subplot(1,4,1)
-        fCirc([0,0],0.01,1000,'r')
-        hold on
-        plot(y1(:,1),y1(:,2), 'b-', ...
-            y2(:,1),y2(:,2), 'b-', ...
-            y3(:,1),y3(:,2), 'b-', ...
-            y4(:,1),y4(:,2), 'b-', ...
-            y5(:,1),y5(:,2), 'b-')
-        hold off
-        axis equal
-        axis([-0.1 0.1 -0.3 0.1])
-        xlabel('x-position (m)')
-        ylabel('y-position (m)')
-        title('A')
-    case 'VF'
-        subplot(1,4,2)
-        fCirc([0,0],0.01,1000,'r')
-        hold on
-        plot(y1(:,1),y1(:,2), 'r-', ...
-            y2(:,1),y2(:,2), 'g-', ...
-            y3(:,1),y3(:,2), 'm-', ...
-            y4(:,1),y4(:,2), 'k-', ...
-            y5(:,1),y5(:,2), 'b-')
-        hold off
-        axis equal
-        axis([-0.15 0.05 -0.3 .1])
-        xlabel('x-position (m)')
-        ylabel('y-position (m)')
-        title('B')
-    case 'AL'
-        subplot(143)
-        fCirc([0,0],0.01,1000,'r')
-        hold on
-        plot(y1(:,1),y1(:,2), 'b-', ...
-            y2(:,1),y2(:,2), 'b-', ...
-            y3(:,1),y3(:,2), 'b-', ...
-            y4(:,1),y4(:,2), 'b-', ...
-            y5(:,1),y5(:,2), 'b-')
-        hold off
-        axis equal
-        axis([-0.1 0.1 -0.3 0.1])
-        title('C')
-        xlabel('x-position (m)')
-    case 'AE'
-        figure(1)
-        subplot(144)
-        fCirc([0,0],0.01,1000,'r')
-        hold on
-        plot(y1(:,1),y1(:,2), 'b-', ...
-            y2(:,1),y2(:,2), 'b-', ...
-            y3(:,1),y3(:,2), 'b-', ...
-            y4(:,1),y4(:,2), 'b-', ...
-            y5(:,1),y5(:,2), 'b-')
-        hold off
-        axis equal
-        axis([-0.1 0.1 -0.3 0.1])
-        title('D')
-        xlabel('x-position (m)')
-end
-
-figure(2)
-switch expStage
-    case 'NF'
-        subplot(4, 4, 1)
-        ylabel('y-endpoint force (N)')
-        plot(t1,y1(:,3),'b-', ...
-            t2,y2(:,3),'b-', ...
-            t3,y3(:,3),'b-', ...
-            t4,y4(:,3),'b-', ...
-            t5,y5(:,3),'b-')
-        xlabel('time (s)')
-        ylabel('x-velocity (m/s)')
-        title('A')
-        % axis([0 0.6 -0.5 0.5])
-        xlim([0 0.6])
-        subplot(4, 4, 4 + 1)
-        plot(t1,y1(:,4),'b-', ...
-            t2,y2(:,4),'b-', ...
-            t3,y3(:,4),'b-', ...
-            t4,y4(:,4),'b-', ...
-            t5,y5(:,4),'b-')
-        % axis([0 0.6 -.5 1.5])
-        xlim([0 0.6])
-        xlabel('time (s)')
-        ylabel('y-velocity (m/s)')
-        subplot(4,4,8 + 1)
-        plot(t1,y1(:,5),'b-', ...
-            t2,y2(:,5),'b-', ...
-            t3,y3(:,5),'b-', ...
-            t4,y4(:,5),'b-', ...
-            t5,y5(:,5),'b-')
-        xlabel('time (s)')
-        ylabel('x-endpoint force (N)')
-        % axis([0 0.6 -15 15])
-        xlim([0 0.6])
-        subplot(4,4,12 + 1)
-        plot(t1,y1(:,6),'b-', ...
-            t2,y2(:,6),'b-', ...
-            t3,y3(:,6),'b-', ...
-            t4,y4(:,6),'b-', ...
-            t5,y5(:,6),'b-')
-        %axis([0 0.6 -30 30])
-         xlim([0 0.6])
-        xlabel('time (s)')
-        ylabel('y-endpoint force (N)')
-    case 'VF'
-        subplot(4, 4, 2)
-        plot(t1,y1(:,3),'b-', ...
-            t2,y2(:,3),'b-', ...
-            t3,y3(:,3),'b-', ...
-            t4,y4(:,3),'b-', ...
-            t5,y5(:,3),'b-')
-        xlabel('time (s)')
-        title('B')
-        % axis([0 0.6 -0.5 0.5])
-        xlim([0 0.6]);
-        subplot(4, 4, 4 + 2)
-        plot(t1,y1(:,4),'b-', ...
-            t2,y2(:,4),'b-', ...
-            t3,y3(:,4),'b-', ...
-            t4,y4(:,4),'b-', ...
-            t5,y5(:,4),'b-')
-        %axis([0 0.6 -.5 1.5])
-        xlim([0 0.6]);
-        xlabel('time (s)')
-        subplot(4,4,8 + 2)
-        plot(t1,y1(:,5),'b-', ...
-            t2,y2(:,5),'b-', ...
-            t3,y3(:,5),'b-', ...
-            t4,y4(:,5),'b-', ...
-            t5,y5(:,5),'b-')
-        xlabel('time (s)')
-        %axis([0 0.6 -15 15])
-        xlim([0 0.6]);
-        subplot(4,4,12 + 2)
-        plot(t1,y1(:,6),'b-', ...
-            t2,y2(:,6),'b-', ...
-            t3,y3(:,6),'b-', ...
-            t4,y4(:,6),'b-', ...
-            t5,y5(:,6),'b-')
-        % axis([0 0.6 -30 30])
-        xlim([0 0.6]);
-        xlabel('time (s)')
-    case 'AL'
-        subplot(4,4,3)
-        plot(t1,y1(:,3),'b-', ...
-            t2,y2(:,3),'b-', ...
-            t3,y3(:,3),'b-', ...
-            t4,y4(:,3),'b-', ...
-            t5,y5(:,3),'b-')
-        xlabel('time (s)')
-        title('C')
-        % axis([0 0.6 -0.5 .5])
-        xlim([0 0.6]);
-        subplot(4,4,3+4)
-        plot(t1,y1(:,4),'b-', ...
-            t2,y2(:,4),'b-', ...
-            t3,y3(:,4),'b-', ...
-            t4,y4(:,4),'b-', ...
-            t5,y5(:,4),'b-')
-        xlabel('time (s)')
-        % axis([0 0.6 -0.5 1.5])
-         xlim([0 0.6])
-        subplot(4,4,3+4+4)
-        plot(t1,y1(:,5),'b-', ...
-            t2,y2(:,5),'b-', ...
-            t3,y3(:,5),'b-', ...
-            t4,y4(:,5),'b-', ...
-            t5,y5(:,5),'b-')
-        xlabel('time (s)')
-        % axis([0 0.6 -15 15])
-        xlim([0 0.6])
-        subplot(4,4,3+4*3)
-        plot(t1,y1(:,6),'b-', ...
-            t2,y2(:,6),'b-', ...
-            t3,y3(:,6),'b-', ...
-            t4,y4(:,6),'b-', ...
-            t5,y5(:,6),'b-')
-       % axis([0 0.6 -30 30])
-        xlim([0 0.6])
-        xlabel('time (s)')
-        
-    case 'AE'
-        subplot(4,4,4)
-        plot(t1,y1(:,3),'b-', ...
-            t2,y2(:,3),'b-', ...
-            t3,y3(:,3),'b-', ...
-            t4,y4(:,3),'b-', ...
-            t5,y5(:,3),'b-')
-        xlabel('time (s)')
-        title('D')
-        xlim([0 0.6])
-        % axis([0 0.6 -0.5 .5])
-        subplot(4,4,4+4)
-        plot(t1,y1(:,4),'b-', ...
-            t2,y2(:,4),'b-', ...
-            t3,y3(:,4),'b-', ...
-            t4,y4(:,4),'b-', ...
-            t5,y5(:,4),'b-')
-        xlabel('time (s)')
-        % axis([0 0.6 -0.5 1.5])
-        xlim([0 0.6])
-        subplot(4,4,4+4+4)
-        plot(t1,y1(:,5),'b-', ...
-            t2,y2(:,5),'b-', ...
-            t3,y3(:,5),'b-', ...
-            t4,y4(:,5),'b-', ...
-            t5,y5(:,5),'b-')
-        xlabel('time (s)')
-        % axis([0 0.6 -15 15])
-        xlim([0 0.6])
-        subplot(4,4,4+4*3)
-        plot(t1,y1(:,6),'b-', ...
-            t2,y2(:,6),'b-', ...
-            t3,y3(:,6),'b-', ...
-            t4,y4(:,6),'b-', ...
-            t5,y5(:,6),'b-')
-        % axis([0 0.6 -30 30])
-        xlim([0 0.6])
-        xlabel('time (s)')
-end
-end
