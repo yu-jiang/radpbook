@@ -1,1 +1,0 @@
-main.m is the file to run. It will generate the subfigures for figure 8 as well as the fitted parameters in table 2.
