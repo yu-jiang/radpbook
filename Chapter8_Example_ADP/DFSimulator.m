@@ -48,9 +48,7 @@ classdef DFSimulator < AbstractSimulator
         % Simulation for learning from unstable to stable during the
         %initial exposure in the DF
         function simDF(this)
-            if this.status == 1;
-                this.reset();
-            end
+            this.K = this.K_;
             [t1,y1] = LocalSDESolver(0,2,[0.001,-.25,0,0,0,0,zeros(1,12+1+4)]',this,1);
             this.K = this.K+[30,0,0,0,0,0;0,0,0,0,0,0];
             [t2,y2] = LocalSDESolver(0,2,[-0.001,-.25,0,0,0,0,zeros(1,12+1+4)]',this,1);
@@ -120,16 +118,16 @@ classdef DFSimulator < AbstractSimulator
         end
         
         function simAL(this)
-            if this.status == 0;
+            %this.K = this,
                 % Make 30 trials to learn
-                for ct = 1:30
+             for ct = 1:30
                    simMoveNLearn(this);
                    % disp('Feedback gains updated to:');
                    % disp(Kct);
-                end
-                this.Ko = this.K;
-                this.status = 1;
-            end
+             end
+             %   this.Ko = this.K;
+             %   this.status = 1;
+            %end
             
             [t1,y1] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
             [t2,y2] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,true);
@@ -140,16 +138,16 @@ classdef DFSimulator < AbstractSimulator
         end
         
         function simAE(this)
-            if this.status == 0;
-                % Make 30 trials to learn
-                for ct = 1:30
-                    SimMoveNLearn(this);
-                end
-                this.status = 1;
-                this.Ko = this.K;
-            else
+%             if this.status == 0;
+%                 % Make 30 trials to learn
+%                 for ct = 1:30
+%                     SimMoveNLearn(this);
+%                 end
+%                 this.status = 1;
+%                 this.Ko = this.K;
+%             else
                 this.K = this.Ko;
-            end
+           % end
             [t1,y1] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
             [t2,y2] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
             [t3,y3] = LocalSDESolver(0,.7,[0.001*(rand-0.5),-.25,0,0,0,0,zeros(1,12+1+4)]',this,false);
