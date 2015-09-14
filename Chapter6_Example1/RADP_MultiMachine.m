@@ -19,7 +19,8 @@ Params = Local_load_params();
 
 % simulate the system until 4s
 % operating in steady-state from 0s to 1s
-Kadp = zeros(1,3,Nm); % Preallocating. This gain is not used before t = 5s;
+% Kadp = zeros(1,3,Nm); % Preallocating. 
+Kadp = repmat([10 50 0],[1,1,Nm-1]); 
 disp('Simulating the system on steady state to 1s...')
 [t0,y0] = ode45(@(t,x) Local_mmsys_online_radp(t,x,Kadp),[0,1],zeros(15*(Nm-1),1));
 
@@ -45,7 +46,7 @@ for cti = 0:N-1
     disp(['simulating the ', num2str(cti+1),'-th interval...', ...
         num2str(N-cti), 'left']);
     % simulate the trajectories for learning
-    [t,y]=ode45(@Local_mmsys_online_radp,[4+cti/N,4+(cti+1)/N],y(end,:));
+    [t,y]=ode45(@(t,x) Local_mmsys_online_radp(t,x,Kadp),[4+cti/N,4+(cti+1)/N],y(end,:));
     for ctj = 1:Nm-1
         Ixx(cti+1,:,ctj) = y(end,imxx(ctj):imxx(ctj)+8)-y(1,imxx(ctj):imxx(ctj)+8);
         Ixu(cti+1,:,ctj) = y(end,imuu(ctj):imuu(ctj)+2)-y(1,imuu(ctj):imuu(ctj)+2);
@@ -77,7 +78,7 @@ for ctj = 1:Nm-1
         pv = pinv(Theta)*Psi;
         K(:,:,ctj)=pv(end-2:end)';
     end
-    Kadp(:,:,ctj)=K(:,:,ctj);
+    Kadp(:,:,ctj) = K(:,:,ctj);
     disp(['The' num2str(ctj+1) '-th machine stopped learning after' num2str(it) 'iterations'])
 end
 
@@ -115,8 +116,6 @@ for ct = 2:Nm
     x(:,ct) = xx(id);
 end
 
-K = repmat([10 50 0],[1,1,Nm-1]); 
-
 % calculate angular differences in matrix form
 dlt=zeros(Nm);d=zeros(1,Nm);
 for i=1:Nm
@@ -126,17 +125,17 @@ end
 u = zeros(Nm,1);
 for i=2:Nm
     if t>=4 && t<=5 % learning stage is between 4s and 5s
-        u(i) = -K(:,:,i-1)*x(:,i)+0.001*sin(100*t);
+        u(i) = -Kadp(:,:,i-1)*x(:,i)+0.001*sin(100*t);
     else
-        u(i) = -K(:,:,i-1)*x(:,i);
-    end
-end
-
-if t>5 % update the control policies and start the post-learning stage
-    for i = 2:Nm
         u(i) = -Kadp(:,:,i-1)*x(:,i);
     end
 end
+
+% if t>5 % update the control policies and start the post-learning stage
+%     for i = 2:Nm
+%         u(i) = -Kadp(:,:,i-1)*x(:,i);
+%     end
+% end
 
 for i = 2:Nm
     dx(:,i-1) = A(:,:,i)*x(:,i)+B(:,:,i)*(u(i)-d(i));
