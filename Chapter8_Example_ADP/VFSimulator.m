@@ -5,11 +5,8 @@ classdef VFSimulator < AbstractSimulator
 % Copyright 2015 Yu Jiang
     
     properties      
- 
-
         Q;
-        Q1
-        
+        Q1        
         K
         Ko
         K_
@@ -21,15 +18,6 @@ classdef VFSimulator < AbstractSimulator
         function this = VFSimulator()
             Initialize(this);
         end
-        
-%         function delete(this)
-%             try
-%                 delete(this.fig1);
-%                 delete(this.fig2);
-%                 delete(this.fig3);
-%             catch
-%             end
-%         end
         
         % Simulation for the NF
         function simNF(this)
@@ -290,8 +278,7 @@ classdef VFSimulator < AbstractSimulator
             this.K_ = lqr(this.A0, this.B, this.Q, this.R);
             this.Ko = lqr(this.A,this.B,this.Q1,this.R);
             this.K = this.K_;
-            
-            
+
             this.fig1 = figure('Visible', 'off');
             this.fig2 = figure('Visible', 'off');
             this.fig3 = figure('Visible', 'off');

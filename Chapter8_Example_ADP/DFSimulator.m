@@ -5,12 +5,12 @@ classdef DFSimulator < AbstractSimulator
 % Copyright 2015 Yu Jiang
 
     properties    
-
-        Q;        
+        Q;     
+        Q1;
         K
         Ko
         K_
-        status = 0; % 0: unlearned. 1: learned          
+        status = 0; % 0: unlearned. 1: learned     
 
     end
     
@@ -263,19 +263,17 @@ classdef DFSimulator < AbstractSimulator
             this.A = this.A0 + [zeros(2,6);
                 150/this.m1  zeros(1,5);
                 zeros(3,6)];
-            theta = 0*15/180*pi;
-            theta1 = 0/180*pi;
+            
             Qc1 = this.Q0+ 1e4*[0.03 0; 0 0];
-            Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-                      
+                     
             Qc = this.Q0;
             this.Q = blkdiag(Qc,0.01*Qc,0.00005*Qc);
             
             %TM1 = [cos(theta1) -sin(theta1); sin(theta1) cos(theta1)];
-            Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
+            this.Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
             %this.R = TM1'*this.R*TM1;
             this.K_ = lqr(this.A0, this.B, this.Q, this.R);
-            this.Ko = lqr(this.A,this.B, Q1,this.R);
+            this.Ko = lqr(this.A,this.B, this.Q1,this.R);
             this.K = this.K_;
             
          this.fig1 = figure('Visible', 'off');
@@ -519,7 +517,7 @@ t = t0:dt:tf;
 y = x0;
 Y = [];
 for clock = t
-    y = y + motor2D(y,A,this.B,this.Q,this.R, ...
+    y = y + motor2D(y,A,this.B,this.Q1,this.R, ...
         this.c1,this.c2,this.K,dt)*dt;
     Y = [Y y];
 end
