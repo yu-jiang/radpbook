@@ -1,6 +1,4 @@
 % main
-
-
 filledCircle([0,-0.1],0.0075,1000,'r');
 hold on
 filledCircle([0,0.1],0.0075,1000,'r');
