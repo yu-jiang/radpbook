@@ -1,5 +1,5 @@
 function dxx=tm_sys(t,xx)
-global KM
+KM = zeros(1,3);
 xx=xx(:);
 twopara
 K0=[2.2361    0.2891];

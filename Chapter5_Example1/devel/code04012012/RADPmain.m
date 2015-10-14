@@ -2,22 +2,23 @@
 % Fixed by April 5th, 2012. The simulation results are included in the new
 % TNNLS paper (if it could be accetped).
 
+pmgr = paramMgr;
+    
+% Simulatin of 0<= t <= 1 when the system is on steady state.  
+[tt1,XX1] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+	[0,1], ...
+	zeros(24+6,1)');
 
-clc
-twopara
-global KM
-KM=zeros(1,3);
-                        
-[tt1,XX1]=ode45(@tm_sys,[0,1],zeros(24+6,1)');
-%%
-[tt2,XX2]=ode45(@tm_sys,[1,2],2*[0 0 .1 0 0  0.1 zeros(1,18) 0 0 .1 0 0  0.1]');
-tt=[tt1;tt2];
-XX=[XX1;XX2];
-                                  
-%x0=[0.5 0 0 -0.5 0 0 zeros(1,13) ];
-%x0=[0.5 0 0 -0.5 0 0 zeros(1,13)   2.2361*0.5 zeros(1,4)];
-%XX=[0.5 0 0 -0.5 0 0 zeros(1,13) 2.2361*0.5 zeros(1,4)];
-%tt=0;
+% Adding perturbation ?
+[tt2,XX2] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+	[1,2], ...
+	2*[0 0 .1 0 0  0.1 zeros(1,18) 0 0 .1 0 0  0.1]');
+
+% Concatinate
+tt = [tt1;tt2];
+XX = [XX1;XX2];
+
+% Date matrices for learning
 Dxx=[];
 Dzz=[];
 Dxz=[];
@@ -32,33 +33,32 @@ Ixiu2=[];
 Ixixi2=[];
 Ixix2=[];
 Dxixi2=[];
+X = XX;
 
-X=XX;
-T=0.1;
-%%
-for i=0:9
-    i;
-    [t,X]=ode45(@tm_sys,[0,T]+2+i*T,X(end,:)');
-    %[t,X]=ode45(@tm_sys,[0 10],x0');
-    tt=[tt;t];
-    XX=[XX;X];
-    Dxx=[Dxx;kron(X(end,1:2),X(end,1:2))-kron(X(1,1:2),X(1,1:2))];
-    Dzz=[Dzz;X(end,3)^2-X(1,3)^2];
-    Dxz=[Dxz;X(end,1:2)*X(end,3)-X(1,1:2)*X(1,3)];
-    Ixx=[Ixx;X(end,7:10)-X(1,7:10)];
-    Ixu=[Ixu;X(end,11:12)-X(1,11:12)];
-    Ixz=[Ixz;X(end,13:14)-X(1,13:14)];
-    Izz=[Izz;X(end,15)-X(1,15)];
-    Izu=[Izu;X(end,16)-X(1,16)];
-    Idx=[Idx;X(end,17:18)-X(1,17:18)];
-    Idz=[Idz;X(end,19)-X(1,19)];
-    Ixiu2=[Ixiu2;X(end,21)-X(1,21)];
-    Ixixi2=[Ixixi2;X(end,22)-X(1,22)];
-    Ixix2=[Ixix2;X(end,23:24)-X(1,23:24)];
-    Dxixi2=[Dxixi2; X(end,20)^2-X(1,20)^2];
+for ct = 0:9
+	% Simulation
+    [t,X] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+		[0,pmgr.T] + 2 + ct*pmgr.T, X(end,:)');
+	% Parse output simulation data 
+    tt = [tt;t];
+    XX = [XX;X];
+    Dxx = [Dxx;kron(X(end,1:2),X(end,1:2))-kron(X(1,1:2),X(1,1:2))];
+    Dzz = [Dzz;X(end,3)^2-X(1,3)^2];
+    Dxz = [Dxz;X(end,1:2)*X(end,3)-X(1,1:2)*X(1,3)];
+    Ixx = [Ixx;X(end,7:10)-X(1,7:10)];
+    Ixu = [Ixu;X(end,11:12)-X(1,11:12)];
+    Ixz = [Ixz;X(end,13:14)-X(1,13:14)];
+    Izz = [Izz;X(end,15)-X(1,15)];
+    Izu = [Izu;X(end,16)-X(1,16)];
+    Idx = [Idx;X(end,17:18)-X(1,17:18)];
+    Idz = [Idz;X(end,19)-X(1,19)];
+    Ixiu2 = [Ixiu2;X(end,21)-X(1,21)];
+    Ixixi2 = [Ixixi2;X(end,22)-X(1,22)];
+    Ixix2 = [Ixix2;X(end,23:24)-X(1,23:24)];
+    Dxixi2 =[Dxixi2; X(end,20)^2-X(1,20)^2];
 end
 
-% %% For Phase-One Learning
+% For Phase-One Learning
 D=0.3*eye(2);
 Q=[5 0; 0 0.0001];
 R=1;
