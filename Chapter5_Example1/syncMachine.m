@@ -11,10 +11,10 @@ Pd = pmgr.B11*pmgr.Ef1*pmgr.Ef2*(sin(x(1) + ...
 	pmgr.angle10 - e(1) - pmgr.angle20) - ...
 	sin(pmgr.angle10 - pmgr.angle20));
 
-if t>=3
-    u = -pmgr.KM*x;
-else
+if t<3
     u = pmgr.K1*x  + 0.1*sin(100*t);
+else
+    u = -pmgr.KM*x;
 end
 
 dx = pmgr.A1*x + pmgr.B1*u - [0; Pd*pmgr.w0/2/pmgr.H1;0];
