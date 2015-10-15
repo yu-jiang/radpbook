@@ -1,28 +1,4 @@
-function status = createAnimation(t, y, ~)
-persistent pmgr
-if isempty(pmgr)
-	pmgr = paramMgr.getInstance();
-end
-status = 0;
-if ~isempty(t)
-	t = t(end);
-	delta = y(1, end);
-	delta1 = y(4, end);
-	delta_ul = y(25, end);
-	delta1_ul = y(28, end);
-	hf = figure(1);
-	ax1 = subplot(211);
-	LocalCreateAnimation(t,pmgr.angle10,delta + pmgr.angle10, ...
-		pmgr.angle20,delta1 + pmgr.angle20,true,1*(t>2)+1*(t>3), pmgr, hf, ax1, true, 'ADP Learning')
-	
-	ax2 = subplot(212);
-	LocalCreateAnimation(t,pmgr.angle10,delta_ul + pmgr.angle10, ...
-	  pmgr.angle20,delta1_ul + pmgr.angle20,true,0, pmgr, hf, ax2, false, 'Unlearned')
-end
-end
-
-
-function LocalCreateAnimation(t,delta,delta0,delta1,delta10,ifct,ifadp, pmgr, hf, ax, ifshowtime, caller)
+function utCreateAnimation(t,delta,delta0,delta1,delta10,ifct,ifadp, pmgr)
 % utCreateAnimation creates the figure of two sync machines. 
 
 B12 = pmgr.B12;
@@ -30,8 +6,8 @@ B11 = pmgr.B11;
 Ef1 = pmgr.Ef1;
 Ef2 = pmgr.Ef2;
 
-% figure(1)
-set(hf,'color',[255,255,255]/255)
+figure(1)
+set(figure(1),'color',[255,255,255]/255)
 %delta=1;
 r1=0.15;
 r2=0.1;
@@ -47,10 +23,10 @@ y0=.4;
 x1=.85;
 y1=.4;
 
-plot(ax,xx1+x0,yy1+y0,'linewidth',1,'color',[1,0,0])
+plot(xx1+x0,yy1+y0,'linewidth',1,'color',[1,0,0])
 hold on
 
-plot(ax,xx2+x1,yy2+y1,'linewidth',1,'color',[1,0,0])
+plot(xx2+x1,yy2+y1,'linewidth',1,'color',[1,0,0])
 
 
 
@@ -75,13 +51,9 @@ line([0,.05],[.2,.25]+0.05+0.05+0.05+0.05+0.05+0.05+0.05,'color',[0,0,0],'linewi
 %===================================================
 
 %---------------------------------------------------
-% show time
-if ifshowtime
-	title(['t=',num2str(t,'%3.2f')],'fontsize',20)
-end
+%   Draw the title
+title(['t=',num2str(t,'%3.2f')],'fontsize',20)
 %===================================================
-
-ylabel(caller, 'fontsize',16)
 
 %---------------------------------------------------
 %   Draw the connection
@@ -166,7 +138,6 @@ end
 % polylogo=imread('c:\logo.jpg');
 % imagesc([0.72 1],[0.08 0],polylogo);
 axis([0,1,0,1*.8])
-axis equal 
 axis off
 hold off
 drawnow

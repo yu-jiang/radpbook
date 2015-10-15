@@ -45,7 +45,7 @@ classdef (Sealed) paramMgr < handle
 	
 	methods (Access = private)
 		function this = paramMgr()
-			disp('Creating a new parameter manager');
+			% disp('Creating a new parameter manager');
 			Initialize(this)
 	    end
 	end
