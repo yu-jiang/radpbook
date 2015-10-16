@@ -1,6 +1,8 @@
 function utCreateAnimation(t,delta,delta0,delta1,delta10,ifct,ifadp, pmgr)
 % utCreateAnimation creates the figure of two sync machines. 
 
+% 	utCreateAnimation(0,pmgr.angle10, pmgr.angle10, pmgr.angle20,pmgr.angle20,true,-1, pmgr)
+
 B12 = pmgr.B12;
 B11 = pmgr.B11;
 Ef1 = pmgr.Ef1;
@@ -80,14 +82,12 @@ end
 %===================================================
 
 
-if ifadp==0
-	patch([.3 .3 .5 .5],[0.12 .2 .2 .12],[0,0,0])
-end
 if ifadp==1
 	patch([.3 .3 .5 .5],[0.12 .2 .2 .12],[1,0,0])
-end
-if ifadp==2
+elseif ifadp==2
 	patch([.3 .3 .5 .5],[0.12 .2 .2 .12],[0,1,0])
+else
+   	patch([.3 .3 .5 .5],[0.12 .2 .2 .12],[0,0,0])
 end
 
 line([0.3,0.3]+0.1,[.2,.25],'color',[0,0,0],'linewidth',4)
