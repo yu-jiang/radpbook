@@ -1,18 +1,18 @@
-%Global ADP
+% GRADP_ex1_main
+
 clc
-clear all
+clear 
 close all
 global W W1 F Q noise_on rho
-rho = .5 ; %redesign gain
-%F=[-.1 0.05 -.1];
-F=[0 -3/2 -1/2];
-Q=[5 0 0;0 0 0;0 0 0];
-W=[2 -1.4 -.45];
-wsave=W;
-W1=W;
-P=[2 0;0 2]*100;
-P=eye(2)*10;
-Pold=-100*eye(2);
+rho = 0.5 ; % Robust Redesign Gain
+
+F = [0 -3/2 -1/2];
+Q = [5 0 0;0 0 0;0 0 0];
+W = [2 -1.4 -.45];
+wsave = W;
+W1 = W;
+P = eye(2)*10;
+Pold = -100*eye(2);
 noise_on=1;
 
 Psave=[];
@@ -84,29 +84,72 @@ Psave
 Qsave;
 %%
 figure(1)
-[t0,y0]=ode45(@polysys0,[0 Tsave(end)],[xinit, rinit]);
-
-
+[t0,y0] = ode45(@polysys0,[0 Tsave(end)],[xinit, rinit]);
 for i=1:length(t0)
- u0(i)=W1*y0(i,1).^[1 2 3]';
+ u0(i) = W1*y0(i,1).^[1 2 3]'; 
 end
-
-
 plot(Tsave,Trjsave(:,1), 'b-', t0,y0(:,1), 'r-.', 'linewidth', 2)
-%axis([0 50 -.5 2])
-legend('With GADP-based controller', 'With initial controller')
+legend('With GRADP-based controller', 'With initial controller')
 xlabel('time (sec)')
 ylabel('\phi')
-state_anno
+ylim([-12 5])
+% Create textarrow
+annotation(figure(1),'textarrow',[0.267857142857143 0.228200808625336],...
+	[0.245238095238095 0.433832086450543],'String',{'1st iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(1),'textarrow',[0.351785714285714 0.291071428571429],...
+	[0.511904761904762 0.666666666666667],'String',{'2nd iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(1),'textarrow',[0.38409703504043 0.386738544474392],...
+	[0.763163519772001 0.700619878874244],'String',{'3rd iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(1),'textarrow',[0.603571428571428 0.535714285714285],...
+	[0.533333333333334 0.673809523809524],'String',{'5th (final) iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(1),'textarrow',[0.480357142857143 0.427966101694915],...
+	[0.528571428571429 0.669064748201439],'String',{'4th iteration'},...
+	'FontSize',12);
 
 
-figure(6)
+
+figure(2)
 plot(Tsave,Trjsave(:,2), 'b-', t0,y0(:,2), 'r-.', 'linewidth', 2)
-%axis([0 50 -.5 2])
-legend('With GADP-based controller', 'With initial controller')
+legend('With GRADP-based controller', 'With initial controller')
 xlabel('time (sec)')
 ylabel('r')
-state_anno
+ylim([-1 5])
+% Create textarrow
+annotation(figure(2),'textarrow',[0.243684992570579 0.1996691805209],...
+	[0.676982591876209 0.278255039384132],'String',{'1st iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(2),'textarrow',[0.325408618127786 0.287523619950097],...
+	[0.560928433268859 0.281012459180867],'String',{'2nd iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(2),'textarrow',[0.407132243684993 0.373938714289719],...
+	[0.502901353965184 0.289622365749069],'String',{'3rd iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(2),'textarrow',[0.473997028231798 0.450802097059071],...
+	[0.433268858800774 0.291719058253785],'String',{'4th iteration'},...
+	'FontSize',12);
+
+% Create textarrow
+annotation(figure(2),'textarrow',[0.592867756315007 0.537890044576523],...
+	[0.586073500967118 0.286266924564797],'String',{'5th (final) iteration'},...
+	'FontSize',12);
 
 
 
@@ -132,22 +175,10 @@ v1=[v1 [y y^2]*P1*[y ;y^2]];
 %vsx=(y^2 + 2)^(3/2)/15 - (2*2^(1/2))/15 - y^2/10;
 
 vsx = 2.0*y*(0.25*y^4 + 1.5*y^3 + 2.25*y^2 + 5.0)^(1/2) - 3.0*y^2 - 1.0*y^3;
-vsxt=vsxt+vsx*(x(i+1)-x(i));
+vsxt = vsxt+vsx*(x(i+1)-x(i));
 % vsx=y^3/150 + (101*y^2 + 100)^(3/2)/15150 - 20/303;
 vs=[vs vsxt];
-% u1=[u1 -1/2*W1*[y;y^2;y^3]];
-% un=[un -1/2*W'*[y;y^2;y^3]];
-% us=[us -1/2*((y*(y*(101*y^2 + 100)^(1/2) + 101*y^2 + 100))/(50*(101*y^2 + 100)^(1/2)))];
 end
-
-
-
-% figure(2)
-% plot(Tsave,ua,'Linewidth',2)
-% legend('u')
-% xlabel('time (sec)')
-% %axis([0 50 -0.5 2])
-% control_anno
 
 figure(3)
 plot(x(2:end),v1,'g:',x(2:end),vn,'r-.',x(2:end),vs+21.1238,'b','linewidth',2)
