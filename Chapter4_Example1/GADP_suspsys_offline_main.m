@@ -1,5 +1,6 @@
 function GADP_suspsys_offline_main()
 
+% The function is tested in MATLAB R2014b
 % Copyright 2015 Yu Jiang
 % Contact Yu Jiang (yu.jiang@nyu.edu)
 syms x1 x2 x3 x4 real
