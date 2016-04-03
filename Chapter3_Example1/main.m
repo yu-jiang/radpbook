@@ -111,7 +111,7 @@ figure(1)
 % subplot(221)
 plot(t_save,x_save(:,1),t0, y0(:,1), 'r--', 'LineWidth', 2)
 xlabel('Time (sec)')
-legend1 = legend('x_b (Under ADP)', 'x_b (Unlearned)');
+legend1 = legend('x_1 (Under ADP)', 'x_1 (Unlearned)');
 set(legend1,'FontSize',12);
 xlim([0,5])
 % %
