@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>LinearADP_main</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-12-30"><meta name="DC.source" content="LinearADP_main.m"><style type="text/css">
+      --><title>Off-policy learning for a turbocharged diesel engine</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-08"><meta name="DC.source" content="RADP_Ch2Ex2_main.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Parameters configuration</a></li><li><a href="#2">Run the simulation and obtain the data matrices \delta_{xx},</a></li><li><a href="#3">Off-policy learning using the collected online data</a></li><li><a href="#4">Post-learning simulations</a></li><li><a href="#5">Plotting results</a></li><li><a href="#6">Display results</a></li></ul></div><h2>Parameters configuration<a name="1"></a></h2><pre class="codeinput">xn = 6;
+  </style></head><body><div class="content"><h1>Off-policy learning for a turbocharged diesel engine</h1><!--introduction--><p>This is the Numerical Example 2.2 in Chapter 2 of book Robust Adaptive Dynamic Programming by Yu Jiang and Zhong-Ping Jiang</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Parameters configuration</a></li><li><a href="#2">Run the simulation and obtain the data matrices \delta_{xx},</a></li><li><a href="#3">Off-policy learning using the collected online data</a></li><li><a href="#4">Post-learning simulations</a></li><li><a href="#5">Plotting results</a></li><li><a href="#6">Display results</a></li></ul></div><h2>Parameters configuration<a name="1"></a></h2><pre class="codeinput">xn = 6;
 un = 2;
 
 <span class="comment">% Set the weighting matrices for the cost function</span>
@@ -249,7 +249,7 @@ annotation(figure(3),<span class="string">'textarrow'</span>,[0.2630173564753 0.
 
 <span class="comment">% Uncomment to save figure</span>
 <span class="comment">% print('Ch2_ex2_fig2_y','-depsc')</span>
-</pre><img vspace="5" hspace="5" src="LinearADP_main_01.png" alt=""> <img vspace="5" hspace="5" src="LinearADP_main_02.png" alt=""> <img vspace="5" hspace="5" src="LinearADP_main_03.png" alt=""> <h2>Display results<a name="6"></a></h2><pre class="codeinput">disp(<span class="string">'Approximate Cost Matrix'</span>)
+</pre><img vspace="5" hspace="5" src="RADP_Ch2Ex2_main_01.png" alt=""> <img vspace="5" hspace="5" src="RADP_Ch2Ex2_main_02.png" alt=""> <img vspace="5" hspace="5" src="RADP_Ch2Ex2_main_03.png" alt=""> <h2>Display results<a name="6"></a></h2><pre class="codeinput">disp(<span class="string">'Approximate Cost Matrix'</span>)
 P
 disp(<span class="string">'Optimal Cost Matrix'</span>)
 Popt
@@ -295,6 +295,11 @@ Kopt =
 
 </pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
+%% Off-policy learning for a turbocharged diesel engine
+% This is the Numerical Example 2.2 in Chapter 2 of book
+% Robust Adaptive Dynamic Programming 
+% by Yu Jiang and Zhong-Ping Jiang
+
 %% Parameters configuration
 xn = 6;
 un = 2;

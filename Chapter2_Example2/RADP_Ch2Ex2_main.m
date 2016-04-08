@@ -1,3 +1,8 @@
+%% Off-policy learning for a turbocharged diesel engine
+% This is the Numerical Example 2.2 in Chapter 2 of book
+% Robust Adaptive Dynamic Programming 
+% by Yu Jiang and Zhong-Ping Jiang
+
 %% Parameters configuration
 xn = 6;
 un = 2;
