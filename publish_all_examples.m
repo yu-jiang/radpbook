@@ -1,14 +1,26 @@
 %% Publish all examples
 % Clean up before start
 clear; bdclose all; close all; clc
-% Save the root level path
-cpath = pwd;
-% Create options
-options = struct('outputDir',[pwd '.\publish\']);
 % Clean up the PUBLISH folder
-delete([pwd '.\publish\*.*'])
+pubdir = [pwd '\publish\'];
+rmdir(pubdir,'s');
+mkdir(pubdir);
 
 %% Publish Example 2.1
+disp('-->Publishing Example 2.1')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch2Ex1\']);
 cd('Chapter2_Example1')
 publish('Ch2Ex1_main.m', options);
+movefile([cpath '\publish\Ch2Ex1\Ch2Ex1_main.html'], [cpath '\publish\Ch2Ex1\index.html']);
 cd(cpath)
+
+%% Publish Example 2.2
+disp('-->Publishing Example 2.2')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch2Ex2\']);
+cd('Chapter2_Example2')
+publish('Ch2Ex2_main.m', options);
+movefile([cpath '\publish\Ch2Ex2\Ch2Ex2_main.html'], [cpath '\publish\Ch2Ex2\index.html']);
+cd(cpath)
+clear; close all;  % clean up
