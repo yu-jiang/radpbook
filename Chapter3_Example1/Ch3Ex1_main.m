@@ -232,6 +232,10 @@ if SkipSection == false
 	print('.\simFigures\Ch3_ex1_fig3_Omega','-depsc')
 end
 
-%% clean up
-cleanup
+%% Save Numerical Results and Clean Up
+% Uncomment the following code to save data
 
+% if exist('simResults','dir') == 0
+% 	mkdir('simResults')
+% end
+% save .\simResults\simResults.mat

@@ -5,3 +5,6 @@ working/*
 tools/*
 publish/*
 *.autosave
+Chapter3_Example1/simFigures/*
+Chapter3_Example1/simResults/*
+Chapter3_Example1/html/*
