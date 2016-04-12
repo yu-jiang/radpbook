@@ -1,16 +1,29 @@
-function SimResults = GADP_invertedpendulum_main()
+function SimResults = Ch4Ex4_main()
+%% Global Adaptive Dynamic Programming for Continuous-time Nonlinear Systems
 % Demo for Global Adaptive Dynamic Programming for Continuous-time
 % Nonlinear Systems, by Yu Jiang and Zhong-Ping
 % Jiang, IEEE Transasctions on Automatic Control, 2015
 %
 % This paper can be found at 
+%
 % 1. http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7063901
+%
 % 2. http://arxiv.org/pdf/1401.0020.pdf
 %
 % System requirements:
+%
 % - MATLAB (Manually Tested in MATLAB R2014b)
+%
 % - MATLAB Symbolic Toolbox
+%
 % - CVX (free to download at http://cvxr.com/cvx/)
+%
+%    Run the following to install CVX
+%
+%     >> run('..\tools\cvx-w64\cvx\cvx_setup.m')
+%
+%     >> run('..\tools\cvx-w64\cvx\cvx_startup.m')
+%
 %
 % Copyright 2015 Yu Jiang 
 % 
@@ -86,9 +99,7 @@ SimResults.Iter = Iter;
 LocalPostProcessData(Params,SimResults);
 end
 
-%% --------------------------------------------------------------
-% LocalOnlinePolicyIteration: -- Implement online SOS policy iteration
-% ------------------------------------------------------------------------
+%% LocalOnlinePolicyIteration: Implement online SOS policy iteration
 function [P,K] = LocalOnlinePolicyIteration(Theta,Xi,Phi,P_old,c)
 cvx_begin sdp
 variables p(3,1)
@@ -128,18 +139,14 @@ cvx_end;
 K = LandK(7:9)';
 end
 
-%% --------------------------------------------------------------
-% invertedPendulumSys: Inverted Pendulum System Dynamics
-% ------------------------------------------------------------------------
+%% invertedPendulumSys: Inverted Pendulum System Dynamics
 function dx = LocalInvertedPendulumSys(x,K,Params)
 u = K * LocalSigma(x);
 dx = Params.F * LocalSigma(x) + Params.G * u;
 end
 
-%% --------------------------------------------------------------
-% LocalInvertedPendulumSysWrapper: Inverted Pendulum System Dynamics with
-% external states for learning purpose
-% ------------------------------------------------------------------------
+%% LocalInvertedPendulumSysWrapper: 
+% Inverted Pendulum System Dynamics with external states for learning purpose
 function dx = LocalInvertedPendulumSysWrapper(t,x,K,Params)
  x1 = x(1);
  x2 = x(2);
@@ -161,23 +168,17 @@ function dx = LocalInvertedPendulumSysWrapper(t,x,K,Params)
         ]; %12
 end
 
-%% --------------------------------------------------------------
-% LocalSigma: Basic function for the plant
-% ------------------------------------------------------------------------
+%% LocalSigma: Basic function for the plant
 function y = LocalSigma(x)
  y = [x(1) x(2) sin(x(1))]';
 end
 
-%% --------------------------------------------------------------
-% LocalExplNoise: Generate exploration noise
-% ------------------------------------------------------------------------
+%% LocalExplNoise: Generate exploration noise
 function e = LocalExplNoise(t)
 e = sin(10*t) + sin(3*t) + sin(50*t) - sin(10*t) + sin(0.7*t) - sin(100*t);
 end
 
-%% --------------------------------------------------------------
-% LocalPostProcessData - Plot results after all simulation is finished
-% -------------------------------------------------------------------------
+%% LocalPostProcessData - Plot results after all simulation is finished
 function LocalPostProcessData(Params,SimResults)
 tsave = SimResults.tsave;
 xsave = SimResults.xsave;

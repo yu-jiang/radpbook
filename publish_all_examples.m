@@ -36,3 +36,16 @@ publish('Ch3Ex1_main.m', options);
 movefile([cpath '\publish\Ch3Ex1\Ch3Ex1_main.html'], [cpath '\publish\Ch3Ex1\index.html']);
 cd(cpath)
 clear; close all;  % clean up
+
+%% Publish Example 4.4
+% Setup CVX
+run('.\tools\cvx-w64\cvx\cvx_setup.m')
+run('.\tools\cvx-w64\cvx\cvx_startup.m')
+disp('-->Publishing Example 4.4')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch4Ex4\']);
+cd('Chapter4_Example4')
+publish('Ch4Ex4_main.m', options);
+movefile([cpath '\publish\Ch4Ex4\Ch4Ex4_main.html'], [cpath '\publish\Ch4Ex4\index.html']);
+cd(cpath)
+clear; close all;  % clean up
