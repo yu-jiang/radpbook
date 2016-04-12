@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The DCP ruleset &mdash; CVX Users&#39; Guide</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="top" title="CVX Users&#39; Guide" href="index.html" />
+    <link rel="next" title="Semidefinite programming mode" href="sdp.html" />
+    <link rel="prev" title="The Basics" href="basics.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="sdp.html" title="Semidefinite programming mode"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="basics.html" title="The Basics"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-dcp-ruleset">
+<span id="dcp"></span><h1>The DCP ruleset<a class="headerlink" href="#the-dcp-ruleset" title="Permalink to this headline">¶</a></h1>
+<p><em>Disciplined convex programming</em> (DCP) requires all models obey a set of
+rules, or conventions, that govern how expressions and functions can appear
+in objectives and constraints. These rules, which we call the <em>DCP ruleset</em>,
+are drawn from basic principles of convex analysis and are relatively easy
+to learn. But they are not exhaustive, which means that it is possible to
+construct expressions and models that are known to be convex, but still
+violate the rules.</p>
+<p>To illustrate the difference between <em>convexity</em> and <em>disciplined convexity</em>,
+consider the function <span class="math">\(f(x)=\sqrt{x^2+1}\)</span>. It is simple to prove that
+this function is convex; its second derivative
+<span class="math">\(f^{(2)}(x)=(x^2+1)^{-3/2}\)</span> is positive for all <span class="math">\(x\)</span>. The ruleset
+is silent on derivatives, however. And if you attempt to express <span class="math">\(f\)</span>
+in the obvious manner in CVX, you will see this error:</p>
+<div class="highlight-none"><div class="highlight"><pre>&gt;&gt; sqrt(x^2+1)
+Error using cvx/sqrt (line 61)
+Disciplined convex programming error:
+    Illegal operation: sqrt( {nonnegative convex} ).
+</pre></div>
+</div>
+<p>The problem is that the <a class="reference internal" href="#compositions"><em>composition rules</em></a> forbid the
+application of a concave function (like <tt class="docutils literal"><span class="pre">sqrt</span></tt>) to a convex expression
+(like <tt class="docutils literal"><span class="pre">x^2+1</span></tt>), since that <em>usually</em> produces a nonconvex result. So CVX
+rejects the expression on this basis.</p>
+<p>Fortunately, most situations like this can be resolved simply by rewriting
+the expression. In this case, <span class="math">\(f\)</span> can also be written as
+<span class="math">\(f(x)=\|[x~1]\|_2\)</span>; a form which CVX accepts:</p>
+<div class="highlight-none"><div class="highlight"><pre>&gt;&gt; norm([x 1])
+ans =
+    cvx nonnegative convex expression (scalar)
+</pre></div>
+</div>
+<p>This expression is acceptable because <tt class="docutils literal"><span class="pre">norm</span></tt> is among the
+<a class="reference internal" href="funcref.html#funcref"><em>functions supported by CVX</em></a>, and it is being used in a
+manner compliant with the <a class="reference internal" href="#compositions"><em>composition rules</em></a>. So
+<span class="math">\(f(x)=\sqrt{x^2+1}\)</span> can indeed be used in CVX models, as long as it is
+expressed in a compliant manner.</p>
+<p>At first, the DCP ruleset  may seem arbitrary or restrictive, but it serves a
+very important purpose. Each rule corresponds to a specific step that CVX
+takes to convert models to solvable form. When CVX rejects a model for a rule
+violation, then, it is doing so <em>because it does not know how to solve it</em>.
+Put another way, by complying with the rules, you are not only proving
+that your model is convex, you are also giving CVX <em>a detailed recipe for
+solving it.</em> (We thank you for the help!)</p>
+<p>In truth, it is never the <em>rules</em> that ultimately prevent a model from being
+represented in CVX. Rather, it is the finite size of the function library,
+which is in turn limited by the capabilities of the underlying numerical
+solvers. Still, the greater your mastery of the DCP ruleset, the more
+productive you will be.</p>
+<div class="section" id="top-level-rules">
+<h2>Top-level rules<a class="headerlink" href="#top-level-rules" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="objectives">
+<h3>Objectives<a class="headerlink" href="#objectives" title="Permalink to this headline">¶</a></h3>
+<p>Acceptable objective expressions come in one of two forms:</p>
+<ul class="simple">
+<li>Convex minimization: <tt class="docutils literal"><span class="pre">minimize(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>,
+where <em>expr</em> is convex (or real affine).</li>
+<li>Concave maximization: <tt class="docutils literal"><span class="pre">maximize(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>,
+where <em>expr</em> is concave (or real affine).</li>
+</ul>
+<p>A model does not need to have an objective; such a problem is called a
+<em>feasibility problem</em>. CVX will attempt to find a single point that  satisfies
+all of the constraints.</p>
+</div>
+<div class="section" id="constraints">
+<h3>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline">¶</a></h3>
+<p>Acceptable constraints come in one of four forms:</p>
+<ul class="simple">
+<li>A <em>less-than inequality constraint</em>, using <tt class="docutils literal"><span class="pre">&lt;=</span></tt>, where the left
+side is convex and the right side is concave.</li>
+<li>A <em>greater-than inequality constraint</em>, using <tt class="docutils literal"><span class="pre">&gt;=</span></tt>, where the left
+side is concave and the right side is convex.</li>
+<li>An <em>equality constraint</em>, using <tt class="docutils literal"><span class="pre">==</span></tt>, where both the left and
+right-hand sides are affine.</li>
+<li>A <em>set membership constraint</em>, using <tt class="docutils literal"><span class="pre">&lt;In&gt;</span></tt>, involving affine
+expressions. (See <a class="reference internal" href="basics.html#sets"><em>Set membership</em></a> for more details.)</li>
+</ul>
+<p><em>Non</em>-equality constraints, constructed using <tt class="docutils literal"><span class="pre">~=</span></tt>, are <em>never allowed</em>.
+(Such constraints are not convex.)</p>
+<p>CVX treats strict <tt class="docutils literal"><span class="pre">&lt;</span></tt> <tt class="docutils literal"><span class="pre">&gt;</span></tt> inequalities identically to non-strict  <tt class="docutils literal"><span class="pre">&lt;=</span></tt>
+<tt class="docutils literal"><span class="pre">&gt;=</span></tt> inequalities, so to avoid confusion the use of strict  inequalities is
+<em>strongly discouraged</em>. For more information,  see <a class="reference internal" href="#strict"><em>Strict inequalities</em></a> below.</p>
+<p>Inequality constraints must be real. Equality constraints, on the
+other hand, may be complex. Complex equality constraints are equivalent
+to two real equality constraints, one for the real part and one for
+the imaginary part. An equality constraint with a real side and a complex
+side, then, has the effect of constraining the imaginary part
+of the complex side to be zero.</p>
+</div>
+</div>
+<div class="section" id="expression-rules">
+<span id="expressions"></span><h2>Expression rules<a class="headerlink" href="#expression-rules" title="Permalink to this headline">¶</a></h2>
+<p>Each scalar expression and subexpression is analyzed to determin
+its <em>curvature</em> and <em>sign</em>. Vectors, matrices, and arrays are analyzed on an
+elementwise basis.</p>
+<div class="section" id="curvature">
+<h3>Curvature<a class="headerlink" href="#curvature" title="Permalink to this headline">¶</a></h3>
+<p>CVX considers four types of <em>curvature</em>: curvature:  <em>constant</em>, <em>affine</em>,
+<em>convex</em>, and <em>concave</em>. The reader should already be familiar with these
+definitions. But for review, a function
+<span class="math">\(f:\mathbf{R}^n\rightarrow\mathbf{R}\)</span> defined on all
+<span class="math">\(\mathbf{R}^n\)</span>, the categories have the following meanings:</p>
+<div class="math">
+\[\begin{split}\begin{array}{l&#64;{\quad}ll}
+  \text{constant} &amp; f(\alpha x + (1-\alpha)y) =  f(x)
+  &amp; \forall x,y\in\mathbf{R}^n,~\alpha\in\mathbf{R} \\
+  \text{affine}   &amp; f(\alpha x + (1-\alpha)y) = \alpha f(x) + (1-\alpha) f(y)
+  &amp; \forall x,y\in\mathbf{R}^n,~\alpha\in\mathbf{R} \\
+  \text{convex}   &amp; f(\alpha x + (1-\alpha)y) \leq \alpha f(x) + (1-\alpha) f(y)
+  &amp; \forall x,y\in\mathbf{R}^n,~\alpha\in[0,1] \\
+  \text{concave}  &amp; f(\alpha x + (1-\alpha)y) \geq \alpha f(x) + (1-\alpha) f(y)
+  &amp; \forall x,y\in\mathbf{R}^n,~\alpha\in[0,1]
+\end{array}\end{split}\]</div>
+<p>There is, of course, significant overlap in these  categories: constant
+expressions are also affine, and (real) affine expressions are both convex and
+concave. Convex and concave expressions are real by definition, but constants
+and affine expressions can be complex.</p>
+<p>CVX does <em>not</em> determine convexity using the above definitions. Instead,
+curvature is determined recursively applying the following rules.  While this
+list may seem long, it is for the most part  an enumeration of basic rules of
+convex analysis for combining convex, concave, and affine forms: sums,
+multiplication by scalars, and so forth.</p>
+<ul class="simple">
+<li>A valid constant expression is<ul>
+<li>any well-formed expression that immediately evaluates to a finite
+value.</li>
+</ul>
+</li>
+<li>A valid affine expression is<ul>
+<li>a valid constant expression;</li>
+<li>a declared variable;</li>
+<li>the sum or difference of affine expressions;</li>
+<li>the product of an affine expression and a constant.</li>
+<li>a valid affine function expression&#8212;see <a class="reference internal" href="#compositions"><em>Composition rules</em></a>;</li>
+</ul>
+</li>
+<li>A valid convex expression is<ul>
+<li>a valid constant or affine expression;</li>
+<li>the sum of two or more convex expressions;</li>
+<li>the difference between a convex expression and a concave
+expression;</li>
+<li>the product of a convex expression and a nonnegative constant;</li>
+<li>the product of a concave expression and a nonpositive constant;</li>
+<li>the negation of a concave expression;</li>
+<li>a valid convex function expression&#8212;see <a class="reference internal" href="#compositions"><em>Composition rules</em></a>;</li>
+<li>an affine scalar raised to a constant power <span class="math">\(p\geq 1\)</span>,
+<span class="math">\(p\neq3,5,7,9,...\)</span>;</li>
+<li>a convex scalar quadratic form&#8212;see <a class="reference internal" href="#quadforms"><em>Scalar quadratic forms</em></a>.</li>
+</ul>
+</li>
+<li>A valid concave expression is<ul>
+<li>a valid constant or affine expression;</li>
+<li>the sum of two or more concave expressions;</li>
+<li>the difference between a concave expression and a convex expression;</li>
+<li>the product of a concave expression and a nonnegative constant;</li>
+<li>the product of a convex expression and a nonpositive constant;</li>
+<li>the negation of a convex expression;</li>
+<li>a valid concave function expression&#8212;see <a class="reference internal" href="#compositions"><em>Composition rules</em></a>;</li>
+<li>a concave scalar raised to a power <span class="math">\(p\in(0,1)\)</span>;</li>
+<li>a concave scalar quadratic form&#8212;see <a class="reference internal" href="#quadforms"><em>Scalar quadratic forms</em></a>.</li>
+</ul>
+</li>
+</ul>
+<p>We note that the set of rules listed above is redundant; there are much
+smaller, equivalent sets of rules. For matrix and array expressions, these
+rules are applied on an elementwise basis.</p>
+<p>Of particular note is that these expression rules generally forbid <em>products</em>
+between nonconstant expressions, with the exception of scalar quadratic forms.
+For example, the expression <tt class="docutils literal"><span class="pre">x*sqrt(x)</span></tt> happens to be a convex function of
+<tt class="docutils literal"><span class="pre">x</span></tt>, but its convexity cannot be verified using the CVX ruleset, and so is
+rejected. (It can be expressed as <tt class="docutils literal"><span class="pre">pow_p(x,3/2)</span></tt>, however.)  We call this
+the <em>no-product rule</em>:</p>
+<ul class="simple">
+<li>The product or ratio of two non-constant (affine, convex, concave)
+expressions is forbidden.</li>
+</ul>
+<p>Adherence to the no-product rule will go a long way to insuring that you
+construct valid expressions. There is one notable exception to this rule,
+however: see <a class="reference internal" href="#quadforms"><em>Scalar quadratic forms</em></a> below. But quadratic forms are, strictly
+speaking, an unnecessary convenience, since CVX includes a <tt class="docutils literal"><span class="pre">quad_form</span></tt>
+function that provides the same functionality.</p>
+</div>
+<div class="section" id="sign">
+<span id="id1"></span><h3>Sign<a class="headerlink" href="#sign" title="Permalink to this headline">¶</a></h3>
+<p>CVX also keeps track of the <em>sign</em> of an expression as well. Expressions are
+classified as <em>positive</em>, <em>negative</em>, and <em>unknown sign</em>. In a slight abuse of
+notation, nonnegative expressions are also treated as positive, and
+nonpositive expressions are also treated as negative. It should be noted that
+CVX does <em>not</em> perform any sort of advanced interval analysis to determine if
+an expression is positive or negative. As with curvature, it draws its
+conclusions by applying a simple set of rules:</p>
+<ul class="simple">
+<li>A &#8220;positive&#8221; expression is<ul>
+<li>a positive constant (or zero);</li>
+<li>a variable <em>declared</em> <cite>nonnegative</cite> (see <a class="reference internal" href="basics.html#variables"><em>Variables</em></a>);</li>
+<li>a diagonal element of a variable declared <cite>semidefinite</cite>
+(see <a class="reference internal" href="basics.html#variables"><em>Variables</em></a>);</li>
+<li>a call to any function specifically labeled as <em>positive</em>
+(see <a class="reference internal" href="basics.html#functions"><em>Functions</em></a> below);</li>
+<li>a negative expression multiplied by a negative constant;</li>
+<li>a positive expression multiplied by a positive constant;</li>
+<li>the sum of positive expressions.</li>
+</ul>
+</li>
+<li>A &#8220;negative&#8221; expression is<ul>
+<li>a negative constant (or zero);</li>
+<li>a call to any function specifically labeled as <em>negative</em>
+(see <a class="reference internal" href="basics.html#functions"><em>Functions</em></a> below);</li>
+<li>a negative expression multiplied by a positive constant;</li>
+<li>a positive expression multiplied by a negative constant;</li>
+<li>the sum of negative expressions.</li>
+</ul>
+</li>
+</ul>
+<p>That&#8217;s it! Any expression whose sign cannot be determined from these rules is
+classified as having <em>unknown sign</em>. For example, the expression <tt class="docutils literal"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">1</span></tt> has
+unknown sign&#8212;even if a constraint in the model ensures that <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&gt;=</span> <span class="pre">1</span></tt>.
+These rules provide just enough information to CVX to give the user more
+flexibility in how it combines functions together; more on this in
+<a class="reference internal" href="#sign-monotonicity"><em>Sign-dependent monotonicity</em></a> below.</p>
+</div>
+</div>
+<div class="section" id="function-expressions">
+<h2>Function expressions<a class="headerlink" href="#function-expressions" title="Permalink to this headline">¶</a></h2>
+<p>Now let us consider how CVX classifies an expression of the form
+<span class="math">\(f(\arg_1,\arg_2,\dots,\arg_n)\)</span>, where <span class="math">\(f\)</span> is a function from
+CVX&#8217;s function library, and each argument <span class="math">\(arg_k\)</span> is an otherwise well-
+posed scalar  CVX expression. In the case where a MATLAB function accepts
+vector, matrix, or array arguments, everything we discuss here is applied in
+an elementwise fashion. For instance, the  expression <cite>norm(x)</cite>, where <cite>x</cite> is
+a vector of length <span class="math">\(n\)</span>, can be thought of as a function expression
+involving <span class="math">\(n\)</span> separate scalar arguments.</p>
+<div class="section" id="function-classification">
+<h3>Function classification<a class="headerlink" href="#function-classification" title="Permalink to this headline">¶</a></h3>
+<p>In order to proceed, we must first understand the properties of the function
+<span class="math">\(f\)</span> itself. As with basic expressions, CVX categorizes functions
+according to their <em>curvature</em> and <em>sign</em>. They also obtain two more
+attributes as well: <em>monotonicity</em> and <em>domain</em>. For functions with only one
+argument, the categorization is straightforward. Some examples are given in
+the table below.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="20%" />
+<col width="11%" />
+<col width="16%" />
+<col width="10%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Function</th>
+<th class="head">Meaning</th>
+<th class="head">Curvature</th>
+<th class="head">Monotonicity</th>
+<th class="head">Sign</th>
+<th class="head">Domain</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">sum(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(\sum_i x_i\)</span></td>
+<td>affine</td>
+<td>increasing</td>
+<td>unknown</td>
+<td><span class="math">\(\mathbb{R}\)</span></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">abs(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(|x|\)</span></td>
+<td>convex</td>
+<td>sign-dependent</td>
+<td>positive</td>
+<td><span class="math">\(\mathbb{R}\)</span></td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">log(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(1/x\)</span></td>
+<td>convex</td>
+<td>decreasing</td>
+<td>unknown</td>
+<td><span class="math">\(\{x\,|\,x&gt;0\}\)</span></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">sqrt(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(\sqrt x\)</span></td>
+<td>concave</td>
+<td>increasing</td>
+<td>positive</td>
+<td><span class="math">\(\{x\,|\,x\geq 0\}\)</span></td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">inv_pos(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(\log x\)</span></td>
+<td>concave</td>
+<td>increasing</td>
+<td>unknown</td>
+<td><span class="math">\(\{x\,|\,x&gt;0\}\)</span></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">entr(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+<td><span class="math">\(-x\log x\)</span></td>
+<td>concave</td>
+<td>non-monotonic</td>
+<td>unknown</td>
+<td><span class="math">\(\{x\,|\,x\geq 0\}\)</span></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="domain">
+<h4>Domain<a class="headerlink" href="#domain" title="Permalink to this headline">¶</a></h4>
+<p>The <em>domain</em> of a function is simply the set of points over which a function
+is well-defined. For a convex or concave function, this set is always convex.
+The domain serves as an <em>implicit constraint</em> on the function&#8217;s input. For
+instance, if we form  <tt class="docutils literal"><span class="pre">sqrt(x+1)</span></tt> in a CVX specification, a new constraint
+<tt class="docutils literal"><span class="pre">x+1&gt;=0</span></tt> is automatically assumed. There is no need to add such a constraint
+separately. Monotonicity is also considered with respect to the function&#8217;s
+domain; so, for instance, <tt class="docutils literal"><span class="pre">sqrt(x)</span></tt> is considered increasing, since that is
+indeed the case for all nonnegative inputs.</p>
+<p>CVX does <em>not</em> consider a function to be convex or concave if it is so only
+over a portion of its domain, even if the argument is constrained to lie in
+one of these portions. For example, consider the function <span class="math">\(1/x\)</span>. This
+function is convex for <span class="math">\(x&gt;0\)</span>, and concave for <span class="math">\(x&lt;0\)</span>. But you can
+never write <tt class="docutils literal"><span class="pre">1/x</span></tt> in CVX (unless <tt class="docutils literal"><span class="pre">x</span></tt> is constant), even if you have
+imposed a constraint such as <tt class="docutils literal"><span class="pre">x&gt;=1</span></tt>, which restricts <tt class="docutils literal"><span class="pre">x</span></tt> to lie in the
+convex portion of function. You <em>can</em>, however, use the CVX function
+<tt class="docutils literal"><span class="pre">inv_pos(x)</span></tt>, listed above, which is defined to have the domain
+<cite>:math:mathbb{R}_{++}</cite>. CVX recognizes this function as convex and
+decreasing.</p>
+</div>
+<div class="section" id="monotonicity">
+<h4>Monotonicity<a class="headerlink" href="#monotonicity" title="Permalink to this headline">¶</a></h4>
+<p>CVX considers two types of monotonicity: <em>increasing</em> and <em>decreasing</em>. In a
+slight abuse of notation, we classify nondecreasing functions as increasing,
+and nonincreasing functions as decreasing. These categories have the following
+meanings:</p>
+<div class="math">
+\[\begin{split}\begin{array}{l&#64;{\quad}l}
+  \text{increasing} &amp; x \geq y ~~\Longrightarrow~~ f(x) \geq f(y) \\
+  \text{decreasing} &amp; x \geq y ~~\Longrightarrow~~ f(x) \leq f(y)
+\end{array}\end{split}\]</div>
+<p>A function that is neither increasing or decreasing is called <em>nonmonotonic</em>.
+In more recent versiojns of CVX, we also consider <em>sign-dependent</em>
+monotonicity. For example, the functions <tt class="docutils literal"><span class="pre">square(x)</span></tt> and <tt class="docutils literal"><span class="pre">abs(x)</span></tt>
+are decreasing for negative <span class="math">\(x\)</span> and increasing for positive <span class="math">\(x\)</span>.
+Previous versions of CVX classifed these functions as nonmonotonic, which
+affected their use in compositions; more on this in
+<a class="reference internal" href="#sign-monotonicity"><em>Sign-dependent monotonicity</em></a> below.</p>
+<p>For functions with multiple arguments, curvature is always considered
+<em>jointly</em>, but monotonicity can be considered on an <em>argument-by-argument</em>
+basis. For example, the function <tt class="docutils literal"><span class="pre">quad_over_lin(x,y)</span></tt></p>
+<div class="math">
+\[\begin{split}f_{\text{quad\_over\_lin}}(x,y) = \begin{cases} |x|^2/y &amp; y &gt; 0 \\
+                            +\infty &amp; y\leq 0  \end{cases}\end{split}\]</div>
+<p>is jointly convex in both <span class="math">\(x\)</span> and <span class="math">\(y\)</span> and decreasing
+in <span class="math">\(y\)</span>, and exhibits sign-dependent monotonicity in <cite>x</cite>.</p>
+<p>Some functions are convex, concave, or affine only for a <em>subset</em> of its
+arguments. For example, the function <tt class="docutils literal"><span class="pre">norm(x,p)</span></tt> where <tt class="docutils literal"><span class="pre">p</span> <span class="pre">\geq</span> <span class="pre">1</span></tt> is
+convex only in its first argument. Whenever this function is used in a CVX
+specification, then, the remaining arguments must be constant, or CVX will
+issue an error message. Such arguments correspond to a function&#8217;s parameters
+in mathematical terminology; <em>e.g.</em>,</p>
+<div class="math">
+\[f_p(x):\mathbf{R}^n\rightarrow\mathbf{R}, \quad f_p(x) \triangleq \|x\|_p\]</div>
+<p>So it seems fitting that we should refer to such arguments as <em>parameters</em> in
+this context as well. Henceforth, whenever we speak of a CVX function as being
+convex, concave, or affine, we will assume that its parameters are known and
+have been given appropriate, constant values.</p>
+</div>
+</div>
+<div class="section" id="composition-rules">
+<span id="compositions"></span><h3>Composition rules<a class="headerlink" href="#composition-rules" title="Permalink to this headline">¶</a></h3>
+<p>Armed with relevant information about <span class="math">\(f\)</span> and the classification of the
+arguments <span class="math">\(\arg_k\)</span> according to the rules in <a class="reference internal" href="#expressions"><em>Expression rules</em></a>, we may
+proceed to classify the full expression. We call the rules that govern these function expressions the <em>composition rules</em>.</p>
+<p>Perhaps the most basic composition rule in convex anaysis is  that convexity
+is closed under composition with an affine mapping. For example, function
+<tt class="docutils literal"><span class="pre">square(x)</span></tt>&#8212;which, as its name implies, computes <span class="math">\(f(x)=x^2\)</span>&#8212;is
+convex for real arguments <cite>x</cite>.  So if <tt class="docutils literal"><span class="pre">x</span></tt> is a real variable of dimension
+<span class="math">\(n\)</span>, <tt class="docutils literal"><span class="pre">a</span></tt> is a  constant <span class="math">\(n\)</span>-vector, and <tt class="docutils literal"><span class="pre">b</span></tt> is a constant, the
+expression</p>
+<div class="highlight-none"><div class="highlight"><pre>square( a&#39; * x + b )
+</pre></div>
+</div>
+<p>is accepted by CVX, which knows that it is convex.</p>
+<p>The affine composition rule is just one one case in a more
+sophisiticated composition ruleset. Here is the complete set:</p>
+<ul class="simple">
+<li>The function expression <span class="math">\(f(\arg_1,\arg_2,\dots,\arg_n)\)</span> is affine
+if <span class="math">\(f\)</span> is affine and every expression
+<span class="math">\(\arg_k\)</span> is affine.</li>
+<li>The function expression <span class="math">\(f(\arg_1,\arg_2,\dots,\arg_n)\)</span> is convex
+if <span class="math">\(f\)</span> is convex (or affine), and if one of the following is true
+for <em>every</em> expression <span class="math">\(\arg_k\)</span>:<ul>
+<li><span class="math">\(\arg_k\)</span> is affine.</li>
+<li><span class="math">\(\arg_k\)</span> is convex, <em>and</em> the function is increasing
+in argument <span class="math">\(k\)</span>.</li>
+<li><span class="math">\(\arg_k\)</span> is concave, <em>and</em> the function is decreasing
+in argument <span class="math">\(k\)</span>.</li>
+</ul>
+</li>
+<li>The function expression <span class="math">\(f(\arg_1,\arg_2,\dots,\arg_n)\)</span> is concave
+if <span class="math">\(f\)</span> is concave (or affine), and if one of the following is true
+for <em>every</em> expression <span class="math">\(\arg_k\)</span>:<ul>
+<li><span class="math">\(\arg_k\)</span> is affine.</li>
+<li><span class="math">\(\arg_k\)</span> is concave, <em>and</em> the function is increasing
+in argument <span class="math">\(k\)</span>.</li>
+<li><span class="math">\(\arg_k\)</span> is convex, <em>and</em> the function is decreasing
+in argument <span class="math">\(k\)</span>.</li>
+</ul>
+</li>
+</ul>
+<p>For more background on these composition rules, see
+<a class="reference external" href="http://www.stanford.edu/~boyd/cvxbook">Convex Optimization</a>, Section 3.2.4.</p>
+<p>Let us examine some examples. The maximum function is convex and increasing
+in every argument, so it can accept any convex expressions as arguments. For
+example, if <tt class="docutils literal"><span class="pre">x</span></tt> is a vector variable, then</p>
+<div class="highlight-none"><div class="highlight"><pre>max( abs( x ) )
+</pre></div>
+</div>
+<p>obeys the &#8220;convex/increasing/convex&#8221; composition rule, and is therefore
+accepted by CVX, and classified as convex. As another example, consider the
+sum function, which is both convex and concave (since it is affine), and
+increasing in each argument. Therefore the expressions</p>
+<div class="highlight-none"><div class="highlight"><pre>sum( square( x ) )
+sum( sqrt( x ) )
+</pre></div>
+</div>
+<p>are recognized as valid in CVX, and classified as convex and concave,
+respectively. The first one follows from the &#8220;convex/increasing/convex&#8221; rule,
+while the second follows from the &#8220;concave/increasing/concave&#8221; rule.</p>
+<p>Most people who know basic convex analysis like to think of these simpler
+examples in terms of more specific rules: a maximum of convex functions is
+convex, and a sum of convex (concave) functions is convex (concave). But as
+you can see, these rules are just <em>special cases</em> of the this general
+composition ruleset. In fact, with the exception of scalar quadratic
+expressions, the entire DCP ruleset can be thought of as special cases
+of these rules.</p>
+<p>For a more complex example, suppose <tt class="docutils literal"><span class="pre">x</span></tt> is a vector variable, and <tt class="docutils literal"><span class="pre">A</span></tt>,
+<tt class="docutils literal"><span class="pre">b</span></tt>, and <tt class="docutils literal"><span class="pre">f</span></tt> are constants with appropriate dimensions. CVX recognizes
+the expression</p>
+<div class="highlight-none"><div class="highlight"><pre>sqrt(f&#39;*x) + min(4,1.3-norm(A*x-b))
+</pre></div>
+</div>
+<p>as concave. Consider the term <tt class="docutils literal"><span class="pre">sqrt(f'*x)</span></tt>. CVX recognizes that <tt class="docutils literal"><span class="pre">sqrt</span></tt> is
+concave and <tt class="docutils literal"><span class="pre">f'*x</span></tt> is affine, so it concludes that <tt class="docutils literal"><span class="pre">sqrt(f'*x)</span></tt> is
+concave. Now consider the second term <tt class="docutils literal"><span class="pre">min(4,1.3-norm(A*x-b))</span></tt>. CVX
+recognizes that <tt class="docutils literal"><span class="pre">min</span></tt> is concave and increasing, so it can accept concave
+arguments. CVX recognizes that <tt class="docutils literal"><span class="pre">1.3-norm(A*x-b)</span></tt> is concave, since it is the
+difference of a constant and a convex function. So CVX concludes that the
+second term is also concave. The whole expression is then recognized as
+concave, since it is the sum of two concave functions.</p>
+<p>For a negative example, we can return to the original expression presented in
+the beginnnig of this chapter, <tt class="docutils literal"><span class="pre">sqrt(</span> <span class="pre">x^2</span> <span class="pre">+</span> <span class="pre">1</span> <span class="pre">)</span></tt>. Assuming that <tt class="docutils literal"><span class="pre">x</span></tt> is a
+scalar variable, this is the composition of a concave, increasing function
+<tt class="docutils literal"><span class="pre">sqrt</span></tt> and a convex expression <tt class="docutils literal"><span class="pre">x^2+1</span></tt>. According to the composition
+rules, <tt class="docutils literal"><span class="pre">sqrt</span></tt> can accept a <em>concave</em> argument, not a convex argument, so CVX
+rejects it. On the other hand, <tt class="docutils literal"><span class="pre">norm([x</span> <span class="pre">1])</span></tt> is the composition of a convex
+function <tt class="docutils literal"><span class="pre">norm</span></tt> and an affine expression <tt class="docutils literal"><span class="pre">[x</span> <span class="pre">1]</span></tt>, so CVX can indeed accept
+that.</p>
+</div>
+<div class="section" id="sign-dependent-monotonicity">
+<span id="sign-monotonicity"></span><h3>Sign-dependent monotonicity<a class="headerlink" href="#sign-dependent-monotonicity" title="Permalink to this headline">¶</a></h3>
+<p>Monotonicity is clearly a critical aspect of the rules for nonlinear
+compositions. Previous versions of CVX enforced these rules in a way that
+occasionally produced some unfortunate consequences. For  example, consider
+the expression</p>
+<div class="highlight-none"><div class="highlight"><pre>square( square( x ) + 1 )
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">x</span></tt> is a scalar variable. This expression is in fact convex, since
+<span class="math">\((x^2+1)^2 = x^4+2x^2+1\)</span> is convex. However, previous versions of CVX
+used to <em>reject</em> this expression, because <tt class="docutils literal"><span class="pre">square</span></tt> is nonmontonic; and so
+it may not accept a convex argument according to the strictest reading of the
+composition rules above. Indeed, the  square of a convex function is not, in
+general, convex: for example, <span class="math">\((x^2-1)^2 = x^4-2x^2+1\)</span> is not convex.</p>
+<p>In practice, this explanation may proved unsatisfying. After all, even though
+<tt class="docutils literal"><span class="pre">square</span></tt> is nonmonotonic over the entire real line, the expression
+<tt class="docutils literal"><span class="pre">square(x)+1</span></tt> has a range of <span class="math">\([1,+\infty)\)</span>. And <em>over that interval</em>,
+<tt class="docutils literal"><span class="pre">square</span></tt> is increasing. Therefore, one could justifiably claim that the
+composition rules are satisfied it this case.</p>
+<p>The latest versions of CVX implement a simple but effective approach for
+extending the composition rules to cover such cases:  <em>sign-dependent
+monotonicity</em>. To accomplish this, functions that are positive or negative
+over their entire domain are noted as such, so this information can be used
+in the sign analysis described in <a class="reference internal" href="#sign"><em>Sign</em></a> above. Furthermore, each
+functions monotonicity is considered <em>with respect to the sign of its
+input</em>. So, for example, <tt class="docutils literal"><span class="pre">square</span></tt> is increasing for positive inputs, and
+decreasing for negative inputs.</p>
+<p>Under this new regime, we can now see how <tt class="docutils literal"><span class="pre">square(square(x)+1)</span></tt> can be
+accepted by CVX. First, CVX knows that <tt class="docutils literal"><span class="pre">square</span></tt> is nonnegative; and as the
+sum of two nonnegative terms, it draws the same conclusion about
+<tt class="docutils literal"><span class="pre">square(x)+1</span></tt>. Because of this, CVX can conclude that the outer instance to
+<tt class="docutils literal"><span class="pre">square</span></tt> is increasing. CVX determines that this expression is the
+composition of a convex, increasing function and a convex argument, and it is
+accepted by the ruleset.</p>
+<p>Clearly, sign-dependent monotonicity, and the simple rule-based sign analysis
+performed in CVX, is limited. For example, <cite>entr( x )</cite> defined above is
+increasing for <span class="math">\(x\geq 1/e\)</span> and decreasing for <span class="math">\(x\leq 1/e\)</span>, but
+CVX does not consider that. But our experience with implementations found in
+<a class="reference external" href="https://github.com/cvxgrp/cvxpy)">CVXPY</a>, the <a class="reference external" href="http://dcp.stanford.edu/">Stanford DCP expression
+analyzer</a>, and our internal version of CVX
+suggest that this covers nearly all of the cases CVX users are likely to
+encounter.</p>
+</div>
+</div>
+<div class="section" id="scalar-quadratic-forms">
+<span id="quadforms"></span><h2>Scalar quadratic forms<a class="headerlink" href="#scalar-quadratic-forms" title="Permalink to this headline">¶</a></h2>
+<p>In its pure form, the DCP ruleset forbids even the use of simple quadratic
+expressions such as <tt class="docutils literal"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">x</span></tt> (assuming <tt class="docutils literal"><span class="pre">x</span></tt> is a scalar variable). For
+practical reasons, we have chosen to make an exception to the ruleset to
+allow for the recognition of certain specific quadratic forms that map
+directly to certain convex quadratic functions (or their concave negatives)
+in the CVX atom library:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="58%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">x</span> <span class="pre">.*</span> <span class="pre">x</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">square(</span> <span class="pre">x</span> <span class="pre">)</span></tt> (real <tt class="docutils literal"><span class="pre">x</span></tt>)</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">conj(</span> <span class="pre">x</span> <span class="pre">)</span> <span class="pre">.*</span> <span class="pre">x</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">square_abs(</span> <span class="pre">x</span> <span class="pre">)</span></tt></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">y'</span> <span class="pre">*</span> <span class="pre">y</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">sum_square_abs(</span> <span class="pre">y</span> <span class="pre">)</span></tt></td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">(A*x-b)'*Q*(Ax-b)</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">quad_form(</span> <span class="pre">A*x</span> <span class="pre">-</span> <span class="pre">b,</span> <span class="pre">Q</span> <span class="pre">)</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p>CVX detects the quadratic expressions such as those on the left above, and
+determines whether or not they are convex or concave; and if so, translates
+them to an equivalent function call, such as those on the right above.</p>
+<p>CVX examines each <em>single</em> product of affine expressions, and each <em>single</em>
+squaring of an affine expression, checking for convexity; it will not check,
+for example, sums of products of affine expressions. For example, given
+scalar variables <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt>, the expression</p>
+<div class="highlight-none"><div class="highlight"><pre>x ^ 2 + 2 * x * y + y ^2
+</pre></div>
+</div>
+<p>will cause an error in CVX, because the second of the three terms
+<tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></tt>, is neither convex nor concave. But the equivalent
+expressions</p>
+<div class="highlight-none"><div class="highlight"><pre>( x + y ) ^ 2
+( x + y ) * ( x + y )
+</pre></div>
+</div>
+<p>will be accepted.</p>
+<p>CVX actually completes the square when it comes across a scalar quadratic
+form, so the form need not be symmetric. For example, if <tt class="docutils literal"><span class="pre">z</span></tt> is a vector
+variable, <tt class="docutils literal"><span class="pre">a</span></tt>, <tt class="docutils literal"><span class="pre">b</span></tt> are constants, and <tt class="docutils literal"><span class="pre">Q</span></tt> is positive definite, then</p>
+<div class="highlight-none"><div class="highlight"><pre>( z + a )&#39; * Q * ( z + b )
+</pre></div>
+</div>
+<p>will be recognized as convex. Once a quadratic form has been verified by
+CVX, it can be freely used in any way that a normal convex or concave
+expression can be, as described in <a class="reference internal" href="#expressions"><em>Expression rules</em></a>.</p>
+<p>Quadratic forms should actually be used <em>less frequently</em> in disciplined
+convex programming than in a more traditional mathematical programming
+framework, where a quadratic form is often a smooth substitute for a
+nonsmooth form that one truly wishes to use. In CVX, such
+substitutions are rarely necessary, because of its support for nonsmooth
+functions. For example, the constraint</p>
+<div class="highlight-none"><div class="highlight"><pre>sum( ( A * x - b ) .^ 2 ) &lt;= 1
+</pre></div>
+</div>
+<p>is equivalently represented using the Euclidean norm:</p>
+<div class="highlight-none"><div class="highlight"><pre>norm( A * x - b ) &lt;= 1
+</pre></div>
+</div>
+<p>With modern solvers, the second form is more naturally represented using
+a second-order cone constraint&#8212;so the second form may actually be more
+efficient. In fact, in our experience, the non-squared form will often
+be handled more accurately. So we strongly encourage you to re-evaluate
+the use of quadratic forms in your models, in light of the new
+capabilities afforded by disciplined convex programming.</p>
+</div>
+<div class="section" id="strict-inequalities">
+<span id="strict"></span><h2>Strict inequalities<a class="headerlink" href="#strict-inequalities" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned in <a class="reference internal" href="basics.html#constraints"><em>Constraints</em></a>, strict inequalities <tt class="docutils literal"><span class="pre">&lt;</span></tt>, <tt class="docutils literal"><span class="pre">&gt;</span></tt> are
+interpreted in an identical fashion to nonstrict inequalities <tt class="docutils literal"><span class="pre">&gt;=</span></tt>,
+<tt class="docutils literal"><span class="pre">&lt;=</span></tt>. It is important to note that CVX cannot guarantee that an inequality
+will be strictly satisfied at the solution it computes. This is not simply a
+choice we have made in CVX; it is a natural consequence of both the
+underlying mathematics and the design of convex optimization solvers. For
+that reason, we <em>strongly</em> discourage the use of strict inequalities in CVX,
+and a future version may remove them altogether.</p>
+<p>When a strict inequality is essential to your model, you may need to take
+additional steps to ensure compliance. In some cases, this can be
+accomplished through <em>normalization</em>. For instance, consider a set of
+homogeneous equations and inequalities:</p>
+<div class="math">
+\[A x = 0, \quad C x \preceq 0, \quad x \succ 0\]</div>
+<p>Except for the strict inequality, <span class="math">\(x=0\)</span> would be an acceptable
+solution; indeed the need to avoid the origin is the very reason for the
+strict inequality. However, note that if a given <span class="math">\(x\)</span> satisfies these
+constraints, then so does <span class="math">\(\alpha x\)</span> for all <span class="math">\(\alpha&gt;0\)</span>. By
+eliminating this degree of freedom with normalization, we can eliminate the
+strict inequality; for instance:</p>
+<div class="math">
+\[A x = 0, \quad C x \preceq 0, \quad x \succ 0, \quad \mathbf{1}^T x = 1\]</div>
+<p>If normalization is not a valid approach for your model, you may simply need
+to convert the strict inequality into a non-strict one by adding a small
+offset; <em>e.g.</em>, convert <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&gt;</span> <span class="pre">0</span></tt> to, say, <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&gt;=</span> <span class="pre">1e-4</span></tt>. Note that the
+bound needs to be large enough so that the underlying solver considers it
+numerically significant.</p>
+<p>Finally, note that for some functions like <tt class="docutils literal"><span class="pre">log(x)</span></tt> and <tt class="docutils literal"><span class="pre">inv_pos(x)</span></tt>,
+which have domains defined by strict inequalities, the domain restriction is
+handled <em>by the function itself</em>. You do not need to add an explicit
+constraint <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&gt;</span> <span class="pre">0</span></tt> to your model to guarantee that the solution is
+positive.</p>
+</div>
+<div class="section" id="log-convexity">
+<h2>Log convexity<a class="headerlink" href="#log-convexity" title="Permalink to this headline">¶</a></h2>
+<p>Given our strong emphasis on adherence to the DCP ruleset, experienced users
+of CVX may be surprised to accidentally stumble upon certain expressions
+involving <tt class="docutils literal"><span class="pre">log</span></tt> and <tt class="docutils literal"><span class="pre">exp</span></tt> that violate the ruleset <em>but are accepted
+anyway</em>; for example, <tt class="docutils literal"><span class="pre">log(exp(x)+1)</span></tt>. It turns out that this is an
+artifact of CVX&#8217;s support for <a class="reference internal" href="gp.html#gp-mode"><em>geometric programming</em></a>; and
+since it also requires the use of CVX&#8217;s experimental <a class="reference internal" href="advanced.html#successive"><em>successive
+approximation approach</em></a>, it is unsupported. Nevertheless,
+advanced users may be interested in reading more about these &#8220;hidden&#8221; rules
+in the <a class="reference internal" href="advanced.html#log-convexity"><em>Advanced topics</em></a> chapter.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="index.html" title="index">
+          <img class="logo" src="_static/cvxrlogo.png" alt="Logo"/>
+        </a></p><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">The DCP ruleset</a><ul>
+<li><a class="reference internal" href="#top-level-rules">Top-level rules</a><ul>
+<li><a class="reference internal" href="#objectives">Objectives</a></li>
+<li><a class="reference internal" href="#constraints">Constraints</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#expression-rules">Expression rules</a><ul>
+<li><a class="reference internal" href="#curvature">Curvature</a></li>
+<li><a class="reference internal" href="#sign">Sign</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#function-expressions">Function expressions</a><ul>
+<li><a class="reference internal" href="#function-classification">Function classification</a><ul>
+<li><a class="reference internal" href="#domain">Domain</a></li>
+<li><a class="reference internal" href="#monotonicity">Monotonicity</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#composition-rules">Composition rules</a></li>
+<li><a class="reference internal" href="#sign-dependent-monotonicity">Sign-dependent monotonicity</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scalar-quadratic-forms">Scalar quadratic forms</a></li>
+<li><a class="reference internal" href="#strict-inequalities">Strict inequalities</a></li>
+<li><a class="reference internal" href="#log-convexity">Log convexity</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="basics.html"
+                          title="Previous page">&larr; The Basics</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="sdp.html"
+                          title="Next page">&rarr; Semidefinite programming mode</a></p>
+  </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/dcp.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul><h3>Other links</h3>
+<ul class="this-page-menu">
+<li><a href="CVX.pdf" target="_blank">Download the PDF</a></li>
+<li><a href="http://cvxr.com/cvx">CVX home page</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="sdp.html" title="Semidefinite programming mode"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="basics.html" title="The Basics"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright © 2012, CVX Research, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>
