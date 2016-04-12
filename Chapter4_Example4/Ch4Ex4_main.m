@@ -1,14 +1,5 @@
 function SimResults = Ch4Ex4_main()
-%% Global Adaptive Dynamic Programming for Continuous-time Nonlinear Systems
-% Demo for Global Adaptive Dynamic Programming for Continuous-time
-% Nonlinear Systems, by Yu Jiang and Zhong-Ping
-% Jiang, IEEE Transasctions on Automatic Control, 2015
-%
-% This paper can be found at 
-%
-% 1. http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7063901
-%
-% 2. http://arxiv.org/pdf/1401.0020.pdf
+%% Global Adaptive Dynamic Programming for an inverted pendulum
 %
 % System requirements:
 %
@@ -18,11 +9,12 @@ function SimResults = Ch4Ex4_main()
 %
 % - CVX (free to download at http://cvxr.com/cvx/)
 %
-%    Run the following to install CVX
+%    You can download CVX along with the examples, unzip tools.zip to 
+%    the root level folder of the examples. Then, run the following
 %
-%     >> run('..\tools\cvx-w64\cvx\cvx_setup.m')
+%     >> run('.\tools\cvx-w64\cvx\cvx_setup.m')
 %
-%     >> run('..\tools\cvx-w64\cvx\cvx_startup.m')
+%     >> run('.\tools\cvx-w64\cvx\cvx_startup.m')
 %
 %
 % Copyright 2015 Yu Jiang 
