@@ -53,10 +53,10 @@ c = LocalComputeObjective(-1, 1);
 
 %% Start online simulation
 for i = 0:Params.MaxIter-1
-    % Data collection
-    Theta = [];Sigma = []; Xi = [];  % Data matrices for online learning
+   % Data collection
+   Theta = [];Sigma = []; Xi = [];  % Data matrices for online learning
     for j = 0:Params.IterInterval/Params.T-1
-        [t,x] = ode45(@(t,x) LocalSystemWrapper(t,x,SysParams), ...
+        [t,x] = ode45(@(t,x) SystemWrapper(t,x,SysParams), ...
             [j,j+1]*Params.T + i*Params.IterInterval, ...
             [x(end,1) zeros(1,9)]);
         Theta = [Theta; 
@@ -68,7 +68,7 @@ for i = 0:Params.MaxIter-1
         SimResults.Xsave = [SimResults.Xsave;x(:,1)];
         for k=1:length(t)
             SimResults.Usave = [SimResults.Usave; 
-               LocalComputeControl(x(k,1),SysParams.K,...
+               LocalComputeControlSignal(x(k,1),SysParams.K,...
                SysParams.noiseFlag,t(k))];
         end
     end
@@ -96,7 +96,7 @@ end
 
 %% Post-process and plot results
 SimResults.hFigs = LocalPostProcess(SysParams, SysParamsInit, ...
-    SimResults,Params, P);
+   SimResults,Params, P);
 end
 
 %% LocalPostProcess: Process results and generate figures
@@ -104,7 +104,7 @@ function hFigs = LocalPostProcess(SysParams, SysParamsInit,SimResults, Params, P
 % Figure 1: 
 % Comparison of x between GADP and unlearned system
 hFig1 = figure(1);
-[t0,y0] = ode45(@(t,x) LocalSystemWrapper(t,x,SysParamsInit),...
+[t0,y0] = ode45(@(t,x) SystemWrapper(t,x,SysParamsInit),...
     [0 50], ...
     [Params.xinit, zeros(1,9)]);
 y0 = y0(:,1); % Only need the first column for the actual x
@@ -251,37 +251,7 @@ K = LnK(6:8);
 cvx_end
 end
 
-%% LocalSystemWrapper
-% Local function to Wrap the system with externally
-% specified integators for learning purpose
-function dX = LocalSystemWrapper(t,x,SysParams)
-% Get local copies for parameters
-K = SysParams.K(:)';
-Q = SysParams.Q;
 
-x1 = x(1);
-sgm  =  x1.^[1 2 3]';
-
-if SysParams.noiseFlag
- e  = LocalNoise(t);
-else
- e = 0;
-end
-
- u  = -1/2*K*sgm + e; 
- dx = LocalSystemKernel(x1,u,SysParams.F); 
- dZ  =  x1.^[2 3 4 5 6]';
- deZ = sgm*e;
- dQ  = sgm'*(Q + 1/4*K'*K)*sgm; 
- dX  = [dx;dZ;deZ;dQ]; % length 1 + 5 + 3 + 1 = 10
-end
-
-%% LocalSystemKernel
-% Local function to implement polynomial system dynamics
-function dx = LocalSystemKernel(x,u, F)
- sgm  =  x.^[1 2 3]';
- dx = F * sgm + u;
-end
  
 %% LocalComputeObjective
 % Compute the objective function for the SOSp in
@@ -292,15 +262,9 @@ syms z
 c = double(int(z.^[2,3,4], x_min,x_max));
 end
 
-%% LocalComputeControl
+%% LocalComputeControlSignal
 % Compute the control input
-function u = LocalComputeControl(x,K,noiseFlag,t)
- u = -1/2*K(:)'*x.^[1 2 3]'+LocalNoise(t)*noiseFlag;
+function u = LocalComputeControlSignal(x,K,noiseFlag,t)
+ u = -1/2*K(:)'*x.^[1 2 3]'+ ExplorationNoise(t)*noiseFlag;
  u = abs(u);
-end
-
-%% LocalNoise
-% Generate exploration noise
-function e = LocalNoise(t)
-  e = (0.01*sin(10*t)+0.01*sin(3*t)+0.01*sin(100*t));
 end

@@ -32,10 +32,24 @@ myfile = fullfile(cpath,'publish','RADP_Ch3Ex1.zip');
 zip(myfile, {'*.m'});
 cd(cpath)
 
+%% Packing Example 4.1
+disp('-->Packing Example 4.1')
+cd('Chapter4_Example1')
+myfile = fullfile(cpath,'publish','RADP_Ch4Ex1.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
 %% Packing Example 4.2
 disp('-->Packing Example 4.2')
 cd('Chapter4_Example2')
 myfile = fullfile(cpath,'publish','RADP_Ch4Ex2.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
+%% Packing Example 4.3
+disp('-->Packing Example 4.3')
+cd('Chapter4_Example3')
+myfile = fullfile(cpath,'publish','RADP_Ch4Ex3.zip');
 zip(myfile, {'*.m'});
 cd(cpath)
 
@@ -46,6 +60,40 @@ myfile = fullfile(cpath,'publish','RADP_Ch4Ex4.zip');
 zip(myfile, {'*.m'});
 cd(cpath)
 
+%% Packing Example 5.1
+disp('-->Packing Example 5.1')
+cd('Chapter5_Example1')
+myfile = fullfile(cpath,'publish','RADP_Ch5Ex1.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
+%% Packing Example 5.2
+disp('-->Packing Example 5.2')
+cd('Chapter5_Example2')
+myfile = fullfile(cpath,'publish','RADP_Ch5Ex2.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
+%% Packing Example 6.1
+disp('-->Packing Example 6.1')
+cd('Chapter6_Example1')
+myfile = fullfile(cpath,'publish','RADP_Ch6Ex1.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
+%% Packing Example 7.1
+disp('-->Packing Example 7.1')
+cd('Chapter7_Example1')
+myfile = fullfile(cpath,'publish','RADP_Ch7Ex1.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
+
+%% Packing Example 7.2
+disp('-->Packing Example 7.2')
+cd('Chapter7_Example2')
+myfile = fullfile(cpath,'publish','RADP_Ch7Ex2.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
 
 %% Packing Tools
 disp('-->Packing Tools')

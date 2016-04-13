@@ -37,10 +37,22 @@ movefile([cpath '\publish\Ch3Ex1\Ch3Ex1_main.html'], [cpath '\publish\Ch3Ex1\ind
 cd(cpath)
 clear; close all;  % clean up
 
-%% Publish Example 4.2
+%% Chapter 4 
 % Setup CVX
-% run('.\tools\cvx-w64\cvx\cvx_setup.m')
-% run('.\tools\cvx-w64\cvx\cvx_startup.m')
+addpath('tools');
+run .\tools\setuptools.m
+%% Publish Example 4.1
+disp('-->Publishing Example 4.1')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch4Ex1\']);
+cd('Chapter4_Example1')
+publish('Ch4Ex1_main.m', options);
+movefile([cpath '\publish\Ch4Ex1\Ch4Ex1_main.html'], [cpath '\publish\Ch4Ex1\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+
+%% Publish Example 4.2
 disp('-->Publishing Example 4.2')
 cpath = pwd; % Save the root level path
 options = struct('outputDir',[cpath '\publish\Ch4Ex2\']);
@@ -50,13 +62,74 @@ movefile([cpath '\publish\Ch4Ex2\Ch4Ex2_main.html'], [cpath '\publish\Ch4Ex2\ind
 cd(cpath)
 clear; close all;  % clean up
 
+%% Publish Example 4.3
+disp('-->Publishing Example 4.3')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch4Ex3\']);
+cd('Chapter4_Example3')
+publish('Ch4Ex3_main.m', options);
+movefile([cpath '\publish\Ch4Ex3\Ch4Ex3_main.html'], [cpath '\publish\Ch4Ex3\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
 %% Publish Example 4.4
-% Setup CVX
 disp('-->Publishing Example 4.4')
 cpath = pwd; % Save the root level path
 options = struct('outputDir',[cpath '\publish\Ch4Ex4\']);
 cd('Chapter4_Example4')
 publish('Ch4Ex4_main.m', options);
 movefile([cpath '\publish\Ch4Ex4\Ch4Ex4_main.html'], [cpath '\publish\Ch4Ex4\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+
+%% Publish Example 5.1
+disp('-->Publishing Example 5.1')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch5Ex1\']);
+cd('Chapter5_Example1')
+publish('Ch5Ex1_main.m', options);
+movefile([cpath '\publish\Ch5Ex1\Ch5Ex1_main.html'], [cpath '\publish\Ch5Ex1\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+%% Publish Example 5.2
+disp('-->Publishing Example 5.2')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch5Ex2\']);
+cd('Chapter5_Example2')
+publish('Ch5Ex2_main.m', options);
+movefile([cpath '\publish\Ch5Ex2\Ch5Ex2_main.html'], [cpath '\publish\Ch5Ex2\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+
+%% Publish Example 6.1
+disp('-->Publishing Example 6.1')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch6Ex1\']);
+cd('Chapter6_Example1')
+publish('Ch6Ex1_main.m', options);
+movefile([cpath '\publish\Ch6Ex1\Ch6Ex1_main.html'], [cpath '\publish\Ch6Ex1\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+%% Publish Example 7.1
+disp('-->Publishing Example 7.1')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch7Ex1\']);
+cd('Chapter7_Example1')
+publish('Ch7Ex1_main.m', options);
+movefile([cpath '\publish\Ch7Ex1\Ch7Ex1_main.html'], [cpath '\publish\Ch7Ex1\index.html']);
+cd(cpath)
+clear; close all;  % clean up
+
+%% Publish Example 7.2
+disp('-->Publishing Example 7.2')
+cpath = pwd; % Save the root level path
+options = struct('outputDir',[cpath '\publish\Ch7Ex2\']);
+cd('Chapter7_Example2')
+publish('Ch7Ex2_main.m', options);
+movefile([cpath '\publish\Ch7Ex2\Ch7Ex2_main.html'], [cpath '\publish\Ch7Ex2\index.html']);
 cd(cpath)
 clear; close all;  % clean up

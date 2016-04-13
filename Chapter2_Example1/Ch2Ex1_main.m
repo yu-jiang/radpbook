@@ -5,7 +5,7 @@
 % learns the optimal performance via real-time data.
 %
 % Copyright 2016 Yu Jiang
-mdl = 'LinearADPSimullink_R2015a';
+mdl = 'LinearADPSimullink_R2014b';
 %% Open the model
 %
 open_system(mdl);
