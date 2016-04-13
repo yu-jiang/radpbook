@@ -1,4 +1,4 @@
 # RADPBook
 Source code for examples in Book "Robust Adaptive Dynamic Programming"
 
-See the wiki page [https://github.com/yu-jiang/RADPBook/wiki] for more details
+Check the page [https://yu-jiang.github.io/RADPBook/] for more details.
