@@ -32,11 +32,17 @@ myfile = fullfile(cpath,'publish','RADP_Ch3Ex1.zip');
 zip(myfile, {'*.m'});
 cd(cpath)
 
+%% Packing Example 4.2
+disp('-->Packing Example 4.2')
+cd('Chapter4_Example2')
+myfile = fullfile(cpath,'publish','RADP_Ch4Ex2.zip');
+zip(myfile, {'*.m'});
+cd(cpath)
 
 %% Packing Example 4.4
 disp('-->Packing Example 4.4')
 cd('Chapter4_Example4')
-myfile = fullfile(cpath,'publish','RADP_Ch3Ex1.zip');
+myfile = fullfile(cpath,'publish','RADP_Ch4Ex4.zip');
 zip(myfile, {'*.m'});
 cd(cpath)
 

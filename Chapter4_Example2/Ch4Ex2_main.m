@@ -1,4 +1,5 @@
-function SimResults = GADP_scalar_main()
+function SimResults = Ch4Ex2_main()
+%% GADP for a scalar polynomial system
 % Demo #1 for Global Adaptive Dynamic Programming for Continuous-time
 % Nonlinear Systems, by Yu Jiang and Zhong-Ping
 % Jiang, IEEE Transasctions on Automatic Control, 2015
@@ -16,6 +17,7 @@ function SimResults = GADP_scalar_main()
 % 
 % Contact: yu.jiang@nyu.edu (Yu Jiang)
 
+%% Setting parameters
 % Parameters for Simulation the dynamic system
 SysParams.Q = 0.01*[1 0 0;0 1 0;0 0 0];  % The cost function will be 
                                          % ([x]_{1,3})'*Q*[x]_{1,3}+u^2
@@ -49,7 +51,7 @@ SimResults.Tsave=[];             % Sample time points during simulation
 % caculate the weights for V
 c = LocalComputeObjective(-1, 1);
 
-% Start online simulation
+%% Start online simulation
 for i = 0:Params.MaxIter-1
     % Data collection
     Theta = [];Sigma = []; Xi = [];  % Data matrices for online learning
@@ -92,18 +94,14 @@ for i = 0:Params.MaxIter-1
     end
 end
 
-% Post-process and plot results
+%% Post-process and plot results
 SimResults.hFigs = LocalPostProcess(SysParams, SysParamsInit, ...
     SimResults,Params, P);
 end
 
-%% Below are local functions
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LocalPostProcess: Process results and generate figures
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function hFigs = LocalPostProcess(SysParams, SysParamsInit,SimResults, Params, P)
-%% Figure 1: 
+% Figure 1: 
 % Comparison of x between GADP and unlearned system
 hFig1 = figure(1);
 [t0,y0] = ode45(@(t,x) LocalSystemWrapper(t,x,SysParamsInit),...
@@ -145,7 +143,7 @@ annotation(hFig1,'textarrow',...
     'FontSize',12,...
     'String',{'2nd iteration'});
 
-%% Figure 2
+% Figure 2
 hFig2 = figure(2);
 plot(SimResults.Tsave, SimResults.Usave,'Linewidth',2)
 myLegend = legend('u');
@@ -172,7 +170,7 @@ annotation(hFig2 ,'textarrow',[0.471204188481675 0.443631993150911],...
 
 
 
-%% Figures 3: 
+% Figures 3: 
 % Comparing the initial, the improved, and the ideal value fcn 
 syms v(y) 
 F = SysParams.F;
@@ -206,7 +204,7 @@ myLegend = legend('V_1 : Initial cost', 'V_4: Improved cost', ...
 set(myLegend, 'FontSize', 12);
 xlabel('x', 'FontSize', 12)
 
-%% Figures 4: 
+% Figures 4: 
 % Comparing the initial, the improved, and the ideal control input 
 hFig4 = figure(4);
 plot(x,u1,'g:',x,un,'r-.',x,us,'b','linewidth',2)
@@ -221,11 +219,10 @@ hFigs = [hFig1; hFig2; hFig3; hFig4];
 
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalOnlinePI: Local function to implement the online ADP method.       %
+%% LocalOnlinePI
+% Local function to implement the online ADP method.
 % Note1: CVX solver is required (Download: http://cvxr.com/cvx/)
 % Note2: The learning process does not depend on the system dynamics (F)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [Pn,K] = LocalOnlinePI(Sigma,Xi,Theta,c,P)
 cvx_begin sdp
 variable pv(3,1)
@@ -254,10 +251,9 @@ K = LnK(6:8);
 cvx_end
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalSystemWrapper: Local function to Wrap the system with externally
+%% LocalSystemWrapper
+% Local function to Wrap the system with externally
 % specified integators for learning purpose
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dX = LocalSystemWrapper(t,x,SysParams)
 % Get local copies for parameters
 K = SysParams.K(:)';
@@ -280,37 +276,31 @@ end
  dX  = [dx;dZ;deZ;dQ]; % length 1 + 5 + 3 + 1 = 10
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalSystemKernel: Local function to implement polynomial system dynamics
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LocalSystemKernel
+% Local function to implement polynomial system dynamics
 function dx = LocalSystemKernel(x,u, F)
  sgm  =  x.^[1 2 3]';
  dx = F * sgm + u;
 end
  
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalComputeObjective: Compute the objective function for the SOSp in
+%% LocalComputeObjective
+% Compute the objective function for the SOSp in
 % Policy Iterations. The objective depends on the interval [x_min, x_max].
 % This requires MATLAB Symbolic Toolbox.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function c = LocalComputeObjective(x_min, x_max)
 syms z
 c = double(int(z.^[2,3,4], x_min,x_max));
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalComputeControl: Compute the control input
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LocalComputeControl
+% Compute the control input
 function u = LocalComputeControl(x,K,noiseFlag,t)
  u = -1/2*K(:)'*x.^[1 2 3]'+LocalNoise(t)*noiseFlag;
  u = abs(u);
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LocalNoise: Generate exploration noise
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LocalNoise
+% Generate exploration noise
 function e = LocalNoise(t)
   e = (0.01*sin(10*t)+0.01*sin(3*t)+0.01*sin(100*t));
 end
-
-
