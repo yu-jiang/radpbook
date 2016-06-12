@@ -175,7 +175,8 @@ classdef DFSimulator < AbstractSimulator
             
             this.fig3.Visible = 'on';
             set(0,'CurrentFigure',this.fig3);
-            plot(xy1(1,:),xy1(2,:),'g',xy2(1,:),xy2(2,:),'r','Linewidth',2);
+            plot(xy1(1,:),xy1(2,:),'g-',xy2(1,:),xy2(2,:),'r-.','Linewidth',2);
+            legend('NF', 'DF')
             axis equal
             axis([-1200 1200 -1000 1000])
             xlabel('x component of stiffness (N m^{-1})')

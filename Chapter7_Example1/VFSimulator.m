@@ -165,7 +165,8 @@ classdef VFSimulator < AbstractSimulator
             
             this.fig3.Visible = 'on';
             set(0, 'CurrentFigure', this.fig3);
-            plot(xy1(1,:),xy1(2,:),'g',xy2(1,:),xy2(2,:),'r','Linewidth',2);
+            plot(xy1(1,:),xy1(2,:),'g',xy2(1,:),xy2(2,:),'r-.','Linewidth',2);
+            legend('NF', 'VF')
             axis equal
             axis([-1200 1200 -1000 1000])
             xlabel('x component of stiffness (N m^{-1})')
@@ -260,18 +261,11 @@ classdef VFSimulator < AbstractSimulator
             this.A = this.A0 + blkdiag(zeros(2), ...
                 [d11/this.m1 d12/this.m1; d21/this.m2 d22/this.m2], ...
                 zeros(2));
-            theta1 = -36/180*pi;%0.9453;
+            theta1 = 15/180*pi;%0.9453;
             TM1 = [cos(theta1) -sin(theta1); sin(theta1) cos(theta1)];
-            Qc1 = 1500*[cos(theta1)*cos(theta1) cos(theta1)*sin(theta1); ...
-                cos(theta1)*sin(theta1) sin(theta1)*sin(theta1)]+this.Q0;
+            Qc1 = 100*TM1'*this.Q0*TM1;
             this.Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
-%             this.B = [0 0;
-%                 0 0;
-%                 0 0;
-%                 0 0;
-%                 1/this.tau 0;
-%                 0 1/this.tau];
-            
+           
             Qc = this.Q0;
             this.Q = blkdiag(Qc,0.01*Qc,0.00005*Qc);
             
