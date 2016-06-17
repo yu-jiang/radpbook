@@ -261,9 +261,10 @@ classdef VFSimulator < AbstractSimulator
             this.A = this.A0 + blkdiag(zeros(2), ...
                 [d11/this.m1 d12/this.m1; d21/this.m2 d22/this.m2], ...
                 zeros(2));
-            theta1 = 15/180*pi;%0.9453;
+            theta1 = 144/180*pi;%0.9453;
             TM1 = [cos(theta1) -sin(theta1); sin(theta1) cos(theta1)];
-            Qc1 = 100*TM1'*this.Q0*TM1;
+            Qc1 = 1500*[cos(theta1)*cos(theta1) cos(theta1)*sin(theta1); 
+				cos(theta1)*sin(theta1) sin(theta1)*sin(theta1)]+this.Q0;
             this.Q1 = blkdiag(Qc1,0.01*Qc1,0.00005*Qc1);
            
             Qc = this.Q0;
