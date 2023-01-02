@@ -1,0 +1,528 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Ch3Ex1_main</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-26"><meta name="DC.source" content="Ch3Ex1_main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Online Data Collection</a></li><li><a href="#3">Post learning</a></li><li><a href="#4">Update controller and finish the rest of the simulation</a></li><li><a href="#5">Plotting results</a></li><li><a href="#6">Figure 1 Time course</a></li><li><a href="#7">Figure 2</a></li><li><a href="#8">Figure 3 -- Region of Attraction</a></li><li><a href="#9">Save Numerical Results and Clean Up</a></li></ul></div><pre class="codeinput"><span class="comment">% Main Script</span>
+close <span class="string">all</span>
+PsiPsi = [];
+PsiU = [];
+Phi = [];
+CostQ = [];
+x_save = []; <span class="comment">% Keep track of the states</span>
+t_save = []; <span class="comment">% Keep track of the time</span>
+
+currentTime = 0; <span class="comment">% Indicating the current time throught the simulation</span>
+
+PhiLength = numel(Phi_fun(zeros(1,4)));
+PsiLength = numel(Psi_fun(zeros(1,4)));
+
+r = 1;  <span class="comment">% Weight on u</span>
+
+N = min(80,2*(PsiLength+PsiLength));
+IterMax = 20;  <span class="comment">% Number of iterations</span>
+
+X = [0.1,-5,0.2,2,zeros(1,PsiLength^2+PsiLength+1)];
+
+T = 0.01; <span class="comment">% Length for each time interval</span>
+</pre><h2>Online Data Collection<a name="2"></a></h2><pre class="codeinput"><span class="keyword">for</span> i = 1:N
+	[t,X] = ode45(@adpSysWrapper, <span class="keyword">...</span>
+		[i-1,i]*T, <span class="keyword">...</span>
+		[X(end,1:4) zeros(1, PsiLength^2 + PsiLength + 1)]);
+	Phi    = [Phi;
+		Phi_fun(X(end,1:4))-Phi_fun(X(1,1:4))];        <span class="comment">%#ok&lt;AGROW&gt;</span>
+	PsiPsi = [PsiPsi;
+		X(end,4 + (1:PsiLength^2))];                   <span class="comment">%#ok&lt;AGROW&gt;</span>
+	PsiU   = [PsiU;
+		X(end,4 + PsiLength^2 + (1:PsiLength))];       <span class="comment">%#ok&lt;AGROW&gt;</span>
+	CostQ = [CostQ;
+		X(end,end)];			                         <span class="comment">%#ok&lt;AGROW&gt;</span>
+	t_save = [t_save;
+		t(:)];                                         <span class="comment">%#ok&lt;AGROW&gt;</span>
+	x_save = [x_save;
+		X(:,1:4)];                                     <span class="comment">%#ok&lt;AGROW&gt;</span>
+	currentTime = t_save(end);
+<span class="keyword">end</span>
+
+<span class="comment">% Off-Policy Learning. Solve the matrix A*pw = B</span>
+
+w = zeros(PsiLength,1);
+
+<span class="keyword">for</span> i = 1:IterMax
+	A = [Phi -2*r*PsiU-2*r*PsiPsi*kron(w,eye(PsiLength))];
+	<span class="comment">% Note: To be consistent with the notations in (Y Jiang &amp;  ZP Jiang,</span>
+	<span class="comment">% TNNLS 2014), the above line should be replaced with</span>
+	<span class="comment">% A = [Phi 2*r*PsiU-2*r*PsiPsi*kron(w,eye(PsiLength))];</span>
+	<span class="comment">% i.e., consider u = w'*phi, not u = -w'*psi</span>
+	<span class="comment">% In that case, the simpleSysWrapper should be called as</span>
+	<span class="comment">% &gt;&gt; simpleSysWrapper(t,x,-w)</span>
+	B = -(CostQ + PsiPsi*kron(w,w));
+	pw = A\B;
+	p = pw(1:PhiLength);
+	w = pw(PhiLength+1:end);
+	<span class="keyword">if</span> i == 1
+		p0 = p; <span class="comment">% save the initial value function</span>
+	<span class="keyword">else</span>
+		<span class="keyword">if</span> norm(p-pp) &lt;= 0.01
+			Iter = i;
+			<span class="keyword">break</span>
+		<span class="keyword">end</span>
+	<span class="keyword">end</span>
+	pp = p; <span class="comment">%save the previous p for convergence check</span>
+<span class="keyword">end</span>
+</pre><h2>Post learning<a name="3"></a></h2><p>Terminate exploration noise but keep appying the inital gains until the states enters the region of attraction</p><pre class="codeinput"><span class="comment">% Compute the region of attraction</span>
+D = getRegionOfAttraction(p);
+<span class="comment">% Keep checking if state is in the region of attraction</span>
+currentStates = x_save(end,:);
+<span class="keyword">while</span>  ~isInRegionOfAttraction(currentStates,p,D);
+	[t,y] = ode45(@(t,x) simpleSysWrapper(t,x,w*0), <span class="keyword">...</span>
+		currentTime+[0,0.1], <span class="keyword">...</span>
+		currentStates);
+	t_save = [t_save; t];
+	x_save = [x_save; y];
+	currentStates = x_save(end,:);
+	currentTime = t_save(end);
+<span class="keyword">end</span>
+</pre><h2>Update controller and finish the rest of the simulation<a name="4"></a></h2><pre class="codeinput">[t,y] = ode45(@(t,x) simpleSysWrapper(t,x,-w), <span class="keyword">...</span>
+	currentTime+[0,5], <span class="keyword">...</span>
+	currentStates);
+t_save = [t_save
+	t(:)];
+x_save = [x_save
+	y(:,1:4)];
+
+<span class="comment">% Also compare with unlearned performance</span>
+[t0,y0] = ode45(@(t,x) simpleSysWrapper(t,x,w*0), <span class="keyword">...</span>
+	currentTime+[0,5], <span class="keyword">...</span>
+	currentStates);
+</pre><h2>Plotting results<a name="5"></a></h2><p>Create figure folder</p><pre class="codeinput"><span class="keyword">if</span> exist(<span class="string">'simFigures'</span>,<span class="string">'dir'</span>) == 0
+	mkdir(<span class="string">'simFigures'</span>);
+<span class="keyword">end</span>
+</pre><h2>Figure 1 Time course<a name="6"></a></h2><pre class="codeinput">figure(1)
+<span class="comment">% subplot(221)</span>
+plot(t_save,x_save(:,1),t0, y0(:,1), <span class="string">'r--'</span>, <span class="string">'LineWidth'</span>, 2)
+xlabel(<span class="string">'Time (sec)'</span>)
+legend1 = legend(<span class="string">'x_1 (Under ADP)'</span>, <span class="string">'x_1 (Unlearned)'</span>);
+set(legend1,<span class="string">'FontSize'</span>,12);
+xlim([0,5])
+<span class="comment">% %</span>
+<span class="comment">% subplot(222)</span>
+<span class="comment">% plot(t_save,x_save(:,2),t0, y0(:,2), 'r--', 'LineWidth', 2)</span>
+<span class="comment">% xlabel('Time (sec)')</span>
+<span class="comment">% legend('x_b (Under ADP)', 'd/dt x_b (Unlearned)')</span>
+<span class="comment">% %</span>
+<span class="comment">% subplot(223)</span>
+<span class="comment">% plot(t_save,x_save(:,3),t0, y0(:,3), 'r--', 'LineWidth', 2)</span>
+<span class="comment">% xlabel('Time (sec)')</span>
+<span class="comment">% legend('x_b (Under ADP)', 'x_w (Unlearned)')</span>
+<span class="comment">% %</span>
+<span class="comment">% subplot(224)</span>
+<span class="comment">% plot(t_save,x_save(:,4),t0, y0(:,4), 'r--', 'LineWidth', 2)</span>
+<span class="comment">% xlabel('Time (sec)')</span>
+<span class="comment">% legend('x_b (Under ADP)', 'd/dt x_w (Unlearned)')</span>
+
+<span class="comment">% Create textarrow</span>
+annotation(<span class="string">'textarrow'</span>,[0.366326530612245 0.268112244897959],<span class="keyword">...</span>
+	[0.681349206349206 0.743253968253969],<span class="string">'String'</span>,{<span class="string">'Controller Updated'</span>},<span class="keyword">...</span>
+	<span class="string">'FontSize'</span>,12);
+
+print(<span class="string">'.\simFigures\Ch3_ex1_fig1_x'</span>,<span class="string">'-depsc'</span>);
+</pre><img vspace="5" hspace="5" src="Ch3Ex1_main_01.png" alt=""> <h2>Figure 2<a name="7"></a></h2><p>Plot the value function surfaces and compare the inital one and the optimized one</p><pre class="codeinput">xxb = -0.5:0.05:0.5;
+xxw = -0.2:0.02:0.2;
+[XX,YY] = meshgrid(xxb, xxw);
+VV = zeros(size(XX));
+VV0 = VV;
+
+<span class="keyword">for</span> i = 1:numel(XX)
+	VV0(i) = p0'*Phi_fun([XX(i),0,YY(i),0])';
+	VV(i) = p'*Phi_fun([XX(i),0,YY(i),0])';
+<span class="keyword">end</span>
+
+figure(2)
+surf(XX,YY,VV0)
+hold <span class="string">on</span>
+surf(XX,YY,VV)
+hold <span class="string">off</span>
+
+xlabel(<span class="string">'x_b'</span>, <span class="string">'FontSize'</span>, 14);
+ylabel(<span class="string">'x_w'</span>, <span class="string">'FontSize'</span>, 14);
+
+<span class="comment">% Create textarrow</span>
+annotation(<span class="string">'textarrow'</span>,[0.821428571428571 0.889285714285713],<span class="keyword">...</span>
+	[0.821759259259259 0.652380952380954],<span class="string">'String'</span>,<span class="string">'V_0(x_b,0,x_w,0)'</span>,<span class="keyword">...</span>
+	<span class="string">'FontSize'</span>,12);
+
+<span class="comment">% Create textarrow</span>
+annotation(<span class="string">'textarrow'</span>,[0.833928571428571 0.868148148148148],<span class="keyword">...</span>
+	[0.157142857142857 0.336798336798337],<span class="string">'String'</span>, <span class="keyword">...</span>
+	[<span class="string">'V_'</span> num2str(Iter-1) <span class="string">'(x_b,0,x_w,0)'</span>],<span class="keyword">...</span>
+	<span class="string">'FontSize'</span>,12);
+
+print(<span class="string">'.\simFigures\Ch3_ex1_fig2_v'</span>,<span class="string">'-depsc'</span>)
+</pre><img vspace="5" hspace="5" src="Ch3Ex1_main_02.png" alt=""> <h2>Figure 3 -- Region of Attraction<a name="8"></a></h2><p>Note: This section will be skipped if you are running an order version of MATLAB which does not have the function delaunayTriangulation</p><pre class="codeinput">SkipSection = false;
+<span class="keyword">try</span>
+	delaunayTriangulation;
+<span class="keyword">catch</span> e
+	<span class="keyword">if</span> strcmp(e.identifier, <span class="string">'MATLAB:UndefinedFunction'</span>);
+		SkipSection = true;
+		warning([<span class="string">'The Region of attraction will not be plotted because'</span>, <span class="keyword">...</span>
+			<span class="string">' MATLAB version is too old'</span>])
+	<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> SkipSection == false
+	indexToRemove = [];
+
+	xxb = linspace(-0.5,0.5,30);
+	xxw = linspace(-0.2,0.2,30);
+	xxdb = linspace(-5,5,30);
+
+	[XX,YY,ZZ] = meshgrid(xxb, xxdb, xxw);
+
+	<span class="keyword">for</span> i = 1:numel(XX)
+		<span class="keyword">if</span> ~isInRegionOfAttraction([XX(i) YY(i) ZZ(i) 0],p,D)
+			indexToRemove = [indexToRemove i];
+		<span class="keyword">end</span>
+	<span class="keyword">end</span>
+	XX(indexToRemove) = [];
+	YY(indexToRemove) = [];
+	ZZ(indexToRemove) = [];
+
+	DT = delaunayTriangulation(XX(:),YY(:),ZZ(:));
+	figure(3)
+	k = convexHull(DT);
+	faceColor  = [0.6875 0.8750 0.8984];
+	trisurf(k,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3), <span class="keyword">...</span>
+		<span class="string">'FaceColor'</span>, faceColor, <span class="keyword">...</span><span class="comment">   %'EdgeAlpha', 0.2, ...</span>
+		<span class="string">'FaceAlpha'</span>, 0.3)
+	xlim([-0.5 0.5])
+	ylim([-5 5])
+	zlim([-0.2 0.2])
+	<span class="comment">% Create textbox</span>
+	annotation(<span class="string">'textbox'</span>,<span class="keyword">...</span>
+		[0.453 0.168 0.07 0.017],<span class="keyword">...</span>
+		<span class="string">'String'</span>,<span class="string">'\Omega'</span>,<span class="keyword">...</span>
+		<span class="string">'LineStyle'</span>,<span class="string">'none'</span>,<span class="keyword">...</span>
+		<span class="string">'FontSize'</span>,12,<span class="keyword">...</span>
+		<span class="string">'FitBoxToText'</span>,<span class="string">'off'</span>);
+	<span class="comment">% Create textarrow</span>
+	annotation(<span class="string">'textarrow'</span>,[0.735714285714286 0.68],<span class="keyword">...</span>
+		[0.85952380952381 0.72],<span class="string">'String'</span>,{ <span class="string">'\Omega_i estimate'</span>},<span class="string">'FontSize'</span>,12);
+	xlabel(<span class="string">'x_b'</span>, <span class="string">'FontSize'</span>, 14);
+	ylabel(<span class="string">'x''_b'</span>, <span class="string">'FontSize'</span>, 14);
+	zlabel(<span class="string">'x_w'</span>, <span class="string">'FontSize'</span>, 14);
+
+	print(<span class="string">'.\simFigures\Ch3_ex1_fig3_Omega'</span>,<span class="string">'-depsc'</span>)
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Ch3Ex1_main_03.png" alt=""> <h2>Save Numerical Results and Clean Up<a name="9"></a></h2><p>Uncomment the following code to save data</p><pre class="codeinput"><span class="comment">% if exist('simResults','dir') == 0</span>
+<span class="comment">% 	mkdir('simResults')</span>
+<span class="comment">% end</span>
+<span class="comment">% save .\simResults\simResults.mat</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% Main Script
+close all
+PsiPsi = [];
+PsiU = [];
+Phi = [];
+CostQ = [];
+x_save = []; % Keep track of the states
+t_save = []; % Keep track of the time
+
+currentTime = 0; % Indicating the current time throught the simulation
+
+PhiLength = numel(Phi_fun(zeros(1,4)));
+PsiLength = numel(Psi_fun(zeros(1,4)));
+
+r = 1;  % Weight on u
+
+N = min(80,2*(PsiLength+PsiLength));
+IterMax = 20;  % Number of iterations
+
+X = [0.1,-5,0.2,2,zeros(1,PsiLength^2+PsiLength+1)];
+
+T = 0.01; % Length for each time interval
+
+%% Online Data Collection
+for i = 1:N
+	[t,X] = ode45(@adpSysWrapper, ...
+		[i-1,i]*T, ...
+		[X(end,1:4) zeros(1, PsiLength^2 + PsiLength + 1)]);
+	Phi    = [Phi;
+		Phi_fun(X(end,1:4))-Phi_fun(X(1,1:4))];        %#ok<AGROW>
+	PsiPsi = [PsiPsi;
+		X(end,4 + (1:PsiLength^2))];                   %#ok<AGROW>
+	PsiU   = [PsiU;
+		X(end,4 + PsiLength^2 + (1:PsiLength))];       %#ok<AGROW>
+	CostQ = [CostQ;
+		X(end,end)];			                         %#ok<AGROW>
+	t_save = [t_save;
+		t(:)];                                         %#ok<AGROW>
+	x_save = [x_save;
+		X(:,1:4)];                                     %#ok<AGROW>
+	currentTime = t_save(end);
+end
+
+% Off-Policy Learning. Solve the matrix A*pw = B
+
+w = zeros(PsiLength,1);
+
+for i = 1:IterMax
+	A = [Phi -2*r*PsiU-2*r*PsiPsi*kron(w,eye(PsiLength))];
+	% Note: To be consistent with the notations in (Y Jiang &  ZP Jiang,
+	% TNNLS 2014), the above line should be replaced with
+	% A = [Phi 2*r*PsiU-2*r*PsiPsi*kron(w,eye(PsiLength))];
+	% i.e., consider u = w'*phi, not u = -w'*psi
+	% In that case, the simpleSysWrapper should be called as
+	% >> simpleSysWrapper(t,x,-w)
+	B = -(CostQ + PsiPsi*kron(w,w));
+	pw = A\B;
+	p = pw(1:PhiLength);
+	w = pw(PhiLength+1:end);
+	if i == 1
+		p0 = p; % save the initial value function
+	else
+		if norm(p-pp) <= 0.01
+			Iter = i;
+			break
+		end
+	end
+	pp = p; %save the previous p for convergence check
+end
+
+%% Post learning
+% Terminate exploration noise but keep appying the inital gains until the
+% states enters the region of attraction
+
+% Compute the region of attraction
+D = getRegionOfAttraction(p);
+% Keep checking if state is in the region of attraction
+currentStates = x_save(end,:);
+while  ~isInRegionOfAttraction(currentStates,p,D);
+	[t,y] = ode45(@(t,x) simpleSysWrapper(t,x,w*0), ...
+		currentTime+[0,0.1], ...
+		currentStates);
+	t_save = [t_save; t];
+	x_save = [x_save; y];
+	currentStates = x_save(end,:);
+	currentTime = t_save(end);
+end
+
+%% Update controller and finish the rest of the simulation
+[t,y] = ode45(@(t,x) simpleSysWrapper(t,x,-w), ...
+	currentTime+[0,5], ...
+	currentStates);
+t_save = [t_save
+	t(:)];
+x_save = [x_save
+	y(:,1:4)];
+
+% Also compare with unlearned performance
+[t0,y0] = ode45(@(t,x) simpleSysWrapper(t,x,w*0), ...
+	currentTime+[0,5], ...
+	currentStates);
+
+%% Plotting results
+% Create figure folder
+if exist('simFigures','dir') == 0
+	mkdir('simFigures');
+end
+
+%% Figure 1 Time course
+figure(1)
+% subplot(221)
+plot(t_save,x_save(:,1),t0, y0(:,1), 'rREPLACE_WITH_DASH_DASH', 'LineWidth', 2)
+xlabel('Time (sec)')
+legend1 = legend('x_1 (Under ADP)', 'x_1 (Unlearned)');
+set(legend1,'FontSize',12);
+xlim([0,5])
+% %
+% subplot(222)
+% plot(t_save,x_save(:,2),t0, y0(:,2), 'rREPLACE_WITH_DASH_DASH', 'LineWidth', 2)
+% xlabel('Time (sec)')
+% legend('x_b (Under ADP)', 'd/dt x_b (Unlearned)')
+% %
+% subplot(223)
+% plot(t_save,x_save(:,3),t0, y0(:,3), 'rREPLACE_WITH_DASH_DASH', 'LineWidth', 2)
+% xlabel('Time (sec)')
+% legend('x_b (Under ADP)', 'x_w (Unlearned)')
+% %
+% subplot(224)
+% plot(t_save,x_save(:,4),t0, y0(:,4), 'rREPLACE_WITH_DASH_DASH', 'LineWidth', 2)
+% xlabel('Time (sec)')
+% legend('x_b (Under ADP)', 'd/dt x_w (Unlearned)')
+
+% Create textarrow
+annotation('textarrow',[0.366326530612245 0.268112244897959],...
+	[0.681349206349206 0.743253968253969],'String',{'Controller Updated'},...
+	'FontSize',12);
+
+print('.\simFigures\Ch3_ex1_fig1_x','-depsc');
+%% Figure 2
+% Plot the value function surfaces and compare the inital one and the
+% optimized one
+xxb = -0.5:0.05:0.5;
+xxw = -0.2:0.02:0.2;
+[XX,YY] = meshgrid(xxb, xxw);
+VV = zeros(size(XX));
+VV0 = VV;
+
+for i = 1:numel(XX)
+	VV0(i) = p0'*Phi_fun([XX(i),0,YY(i),0])';
+	VV(i) = p'*Phi_fun([XX(i),0,YY(i),0])';
+end
+
+figure(2)
+surf(XX,YY,VV0)
+hold on
+surf(XX,YY,VV)
+hold off
+
+xlabel('x_b', 'FontSize', 14);
+ylabel('x_w', 'FontSize', 14);
+
+% Create textarrow
+annotation('textarrow',[0.821428571428571 0.889285714285713],...
+	[0.821759259259259 0.652380952380954],'String','V_0(x_b,0,x_w,0)',...
+	'FontSize',12);
+
+% Create textarrow
+annotation('textarrow',[0.833928571428571 0.868148148148148],...
+	[0.157142857142857 0.336798336798337],'String', ...
+	['V_' num2str(Iter-1) '(x_b,0,x_w,0)'],...
+	'FontSize',12);
+
+print('.\simFigures\Ch3_ex1_fig2_v','-depsc')
+
+%% Figure 3 REPLACE_WITH_DASH_DASH Region of Attraction
+% Note: This section will be skipped if you are running an order version of
+% MATLAB which does not have the function delaunayTriangulation
+
+SkipSection = false;
+try
+	delaunayTriangulation;
+catch e
+	if strcmp(e.identifier, 'MATLAB:UndefinedFunction');
+		SkipSection = true;
+		warning(['The Region of attraction will not be plotted because', ...
+			' MATLAB version is too old'])
+	end
+end
+
+if SkipSection == false
+	indexToRemove = [];
+	
+	xxb = linspace(-0.5,0.5,30);
+	xxw = linspace(-0.2,0.2,30);
+	xxdb = linspace(-5,5,30);
+	
+	[XX,YY,ZZ] = meshgrid(xxb, xxdb, xxw);
+	
+	for i = 1:numel(XX)
+		if ~isInRegionOfAttraction([XX(i) YY(i) ZZ(i) 0],p,D)
+			indexToRemove = [indexToRemove i];
+		end
+	end
+	XX(indexToRemove) = [];
+	YY(indexToRemove) = [];
+	ZZ(indexToRemove) = [];
+	
+	DT = delaunayTriangulation(XX(:),YY(:),ZZ(:));
+	figure(3)
+	k = convexHull(DT);
+	faceColor  = [0.6875 0.8750 0.8984];
+	trisurf(k,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3), ...
+		'FaceColor', faceColor, ...   %'EdgeAlpha', 0.2, ...
+		'FaceAlpha', 0.3)
+	xlim([-0.5 0.5])
+	ylim([-5 5])
+	zlim([-0.2 0.2])
+	% Create textbox
+	annotation('textbox',...
+		[0.453 0.168 0.07 0.017],...
+		'String','\Omega',...
+		'LineStyle','none',...
+		'FontSize',12,...
+		'FitBoxToText','off');
+	% Create textarrow
+	annotation('textarrow',[0.735714285714286 0.68],...
+		[0.85952380952381 0.72],'String',{ '\Omega_i estimate'},'FontSize',12);
+	xlabel('x_b', 'FontSize', 14);
+	ylabel('x''_b', 'FontSize', 14);
+	zlabel('x_w', 'FontSize', 14);
+	
+	print('.\simFigures\Ch3_ex1_fig3_Omega','-depsc')
+end
+
+%% Save Numerical Results and Clean Up
+% Uncomment the following code to save data
+
+% if exist('simResults','dir') == 0
+% 	mkdir('simResults')
+% end
+% save .\simResults\simResults.mat
+##### SOURCE END #####
+--></body></html>

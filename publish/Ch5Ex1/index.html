@@ -1,0 +1,450 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Ch5Ex1_main</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-26"><meta name="DC.source" content="Ch5Ex1_main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">RADP for synchronous machines</a></li><li><a href="#2">For Phase-Two Learning</a></li><li><a href="#3">Plot results</a></li></ul></div><h2>RADP for synchronous machines<a name="1"></a></h2><p>Instantiate the parameter manager</p><pre class="codeinput">pmgr = paramMgr.getInstance();
+
+<span class="comment">% Simulatin of 0&lt;= t &lt;= 1 when the system is on steady state.</span>
+opt = odeset(<span class="string">'OutputFcn'</span>,@createAnimation);
+
+[tt1,XX1] = ode45(@(t,x) syncMachine(t,x,pmgr), <span class="keyword">...</span>
+	[0,1], <span class="keyword">...</span>
+	zeros(24+6,1)', <span class="keyword">...</span>
+    opt);
+
+<span class="comment">% Adding perturbation at t = 1, simulate untill t = 2.</span>
+[tt2,XX2] = ode45(@(t,x) syncMachine(t,x,pmgr), <span class="keyword">...</span>
+	[1,2], <span class="keyword">...</span>
+	2*[0 0 .1 0 0  0.1 zeros(1,18) 0 0 .1 0 0  0.1]',opt);
+
+<span class="comment">% Concatinate the simulatoin results on the first two intervals</span>
+tt = [tt1;tt2];
+XX = [XX1;XX2];
+
+<span class="comment">% Date matrices for learning</span>
+Dxx=[];
+Dzz=[];
+Dxz=[];
+Ixx=[];
+Ixz=[];
+Izz=[];
+Izu=[];
+Ixu=[];
+Idx=[];
+Idz=[];
+Ixiu2=[];
+Ixixi2=[];
+Ixix2=[];
+Dxixi2=[];
+X = XX;
+
+<span class="comment">% Collect data on 10 intervals</span>
+<span class="keyword">for</span> ct = 0:9
+	<span class="comment">% Simulation</span>
+    [t,X] = ode45(@(t,x) syncMachine(t,x,pmgr), <span class="keyword">...</span>
+		[0,pmgr.T] + 2 + ct*pmgr.T, X(end,:)', opt);
+	<span class="comment">% Parse output simulation data</span>
+    tt = [tt;t]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    XX = [XX;X]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Dxx = [Dxx;kron(X(end,1:2),X(end,1:2))-kron(X(1,1:2),X(1,1:2))]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Dzz = [Dzz;X(end,3)^2-X(1,3)^2]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Dxz = [Dxz;X(end,1:2)*X(end,3)-X(1,1:2)*X(1,3)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixx = [Ixx;X(end,7:10)-X(1,7:10)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixu = [Ixu;X(end,11:12)-X(1,11:12)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixz = [Ixz;X(end,13:14)-X(1,13:14)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Izz = [Izz;X(end,15)-X(1,15)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Izu = [Izu;X(end,16)-X(1,16)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Idx = [Idx;X(end,17:18)-X(1,17:18)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Idz = [Idz;X(end,19)-X(1,19)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixiu2 = [Ixiu2;X(end,21)-X(1,21)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixixi2 = [Ixixi2;X(end,22)-X(1,22)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Ixix2 = [Ixix2;X(end,23:24)-X(1,23:24)]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+    Dxixi2 =[Dxixi2; X(end,20)^2-X(1,20)^2]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+<span class="keyword">end</span>
+
+<span class="comment">% For Phase-One Learning</span>
+D = 0.3*eye(2);
+Q = [5 0; 0 0.0001];
+R = 1;
+K = [1 1];
+Pold = -100*eye(2);
+P = zeros(2);
+Psave = [];
+it1 = 0;
+[K0,P0,E0] = lqr(pmgr.A1(1:2,1:2),pmgr.A1(1:2,3),Q,R);
+
+<span class="keyword">while</span> norm(P-Pold)&gt;1e-8
+    it1 = it1+1;
+    Pold = P;
+    theta = [Dxx(:,[1,2,4]) -2*Ixx*kron(eye(2),K')-2*(Ixz+Idx)];
+    Qk = Q + K'*R*K;
+    Xi = -Ixx*Qk(:);
+    PL = theta \ Xi;
+    P = [PL(1)   PL(2)/2;
+        PL(2)/2 PL(3)];
+
+    L = PL(4:5)';
+    K = R \ L;
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Ch5Ex1_main_01.png" alt=""> <h2>For Phase-Two Learning<a name="2"></a></h2><pre class="codeinput"><span class="comment">%K=K0;P=P0;</span>
+B = pmgr.A1(1:2,3);
+H = 0;
+G = 1/pmgr.T1;
+F = -1/pmgr.T1;
+Dc = 0+ G\K*(P\K');
+W = 0.1;
+V = 1.7438e-004;
+
+M = 10*K*(P\K'*R);
+Dxixi = Dzz + 2*Dxz*K'+ Dxx*kron(K',K');
+Ixixi = Izz + 2*Ixz*K'+ Ixx*kron(K',K');
+Ixxi = Ixz + Ixx*kron(eye(2),K');
+Idxi = Idz + Idx*K';
+Ixiuk = Izu + Ixu*K';
+
+Sold = -100*eye(2);
+S = zeros(1);
+it2 = 0;
+Fc = F + pmgr.K0*B;
+[M0,S0,E2] = lqr(Fc,G,W,V);
+Ssave = [];
+Nsave = [];
+Msave = norm(M-M0);
+
+<span class="keyword">while</span> norm(Sold-S)&gt;1e-8
+    Sold=S;
+    it2 = it2+1;
+    phi = [Dxixi   -2*Ixixi*M*V-2*Ixiuk*V -2*Ixxi -2*Idxi];
+    Wk = W + M'*V*M;
+    psi = -Ixixi*Wk(:);
+    SN = phi\psi;
+    S = SN(1);
+    M = SN(2);
+    N = SN(3:4)';
+    L = SN(5);
+<span class="keyword">end</span>
+
+pmgr.KM = [(M*V)\(N+K)+M*K M];
+
+N0 = S0*(pmgr.K0*(pmgr.A1(1:2,1:2)-B*pmgr.K0));
+KM0 = [(M0*V)\(N0+pmgr.K0)+M0*pmgr.K0 M0];
+KM = [(M*V)\(N+K)+M*K M];
+
+<span class="comment">% Post learning simulation</span>
+[t,X]=ode45(@(t,x) syncMachine(t,x,pmgr),[tt(end) 15],XX(end,:)', opt);
+XX = [XX;X];
+tt = [tt;t];
+</pre><img vspace="5" hspace="5" src="Ch5Ex1_main_02.png" alt=""> <h2>Plot results<a name="3"></a></h2><pre class="codeinput">figure(2)
+subplot(211)
+plot(tt,(XX(:,1) + pmgr.angle10)*180/pi,tt,(XX(:,25) + pmgr.angle10)*180/pi,<span class="string">'r-.'</span>,<span class="string">'Linewidth'</span>,1.5)
+legend(<span class="string">'Robust ADP'</span>,<span class="string">'Unlearned'</span>)
+xlabel(<span class="string">'time (sec)'</span>)
+ylabel(<span class="string">'Rotor Angle (degree)'</span>)
+axis([0 10 0 120])
+title(<span class="string">'Generator 1'</span>)
+
+subplot(212)
+plot(tt,(XX(:,4) + pmgr.angle20)*180/pi,tt,(XX(:,28) + pmgr.angle20)*180/pi,<span class="string">'r-.'</span>,<span class="string">'Linewidth'</span>,1.5)
+legend(<span class="string">'Robust ADP'</span>,<span class="string">'Unlearned'</span>)
+xlabel(<span class="string">'time (sec)'</span>)
+ylabel(<span class="string">'Rotor Angle (degree)'</span>)
+axis([0 10 60 80])
+title(<span class="string">'Generator 2'</span>)
+
+<span class="comment">% Create textarrow</span>
+annotation(figure(2),<span class="string">'textarrow'</span>,[0.234811165845649 0.215106732348112],<span class="keyword">...</span>
+    [0.187763713080168 0.244725738396624],<span class="string">'String'</span>,{<span class="string">'Disturbance injected'</span>});
+annotation(figure(2),<span class="string">'textarrow'</span>,[0.399014778325123 0.371100164203612],<span class="keyword">...</span>
+    [0.657227848101265 0.71097046413502],<span class="string">'String'</span>,{<span class="string">'Controller updated'</span>});
+annotation(figure(2),<span class="string">'textarrow'</span>,[0.405582922824302 0.377668308702791],<span class="keyword">...</span>
+    [0.171995780590716 0.22573839662447],<span class="string">'String'</span>,{<span class="string">'Controller updated'</span>});
+annotation(figure(2),<span class="string">'textarrow'</span>,[0.239737274220033 0.220032840722496],<span class="keyword">...</span>
+    [0.681434599156118 0.738396624472574],<span class="string">'String'</span>,{<span class="string">'Disturbance injected'</span>});
+
+figure(3)
+subplot(211)
+plot(tt,XX(:,1)/2/pi+50,tt,XX(:,25)/2/pi+50,<span class="string">'r-.'</span>,<span class="string">'Linewidth'</span>,1.5)
+legend(<span class="string">'Robust ADP'</span>,<span class="string">'Unlearned'</span>)
+xlabel(<span class="string">'time (sec)'</span>)
+ylabel(<span class="string">'Frequency (Hz)'</span>)
+axis([0 10 49.8 50.2])
+title(<span class="string">'Generator 1'</span>)
+
+subplot(212)
+plot(tt,XX(:,5)/2/pi+50,tt,XX(:,29)/2/pi+50,<span class="string">'r-.'</span>,<span class="string">'Linewidth'</span>,1.5)
+legend(<span class="string">'Robust ADP'</span>,<span class="string">'Unlearned'</span>)
+xlabel(<span class="string">'time (sec)'</span>)
+ylabel(<span class="string">'Frequency (Hz)'</span>)
+axis([0 10 49.8 50.2])
+title(<span class="string">'Generator 2'</span>)
+
+<span class="comment">% Create textarrow</span>
+annotation(figure(3),<span class="string">'textarrow'</span>,[0.234811165845649 0.215106732348112],<span class="keyword">...</span>
+    [0.187763713080168 0.244725738396624],<span class="string">'String'</span>,{<span class="string">'Disturbance injected'</span>});
+annotation(figure(3),<span class="string">'textarrow'</span>,[0.399014778325123 0.371100164203612],<span class="keyword">...</span>
+    [0.657227848101265 0.71097046413502],<span class="string">'String'</span>,{<span class="string">'Controller updated'</span>});
+annotation(figure(3),<span class="string">'textarrow'</span>,[0.405582922824302 0.377668308702791],<span class="keyword">...</span>
+    [0.171995780590716 0.22573839662447],<span class="string">'String'</span>,{<span class="string">'Controller updated'</span>});
+annotation(figure(3),<span class="string">'textarrow'</span>,[0.239737274220033 0.220032840722496],<span class="keyword">...</span>
+    [0.681434599156118 0.738396624472574],<span class="string">'String'</span>,{<span class="string">'Disturbance injected'</span>});
+</pre><img vspace="5" hspace="5" src="Ch5Ex1_main_03.png" alt=""> <img vspace="5" hspace="5" src="Ch5Ex1_main_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% RADP for synchronous machines
+% Instantiate the parameter manager
+pmgr = paramMgr.getInstance();
+    
+% Simulatin of 0<= t <= 1 when the system is on steady state.
+opt = odeset('OutputFcn',@createAnimation);
+
+[tt1,XX1] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+	[0,1], ...
+	zeros(24+6,1)', ...
+    opt);
+
+% Adding perturbation at t = 1, simulate untill t = 2.
+[tt2,XX2] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+	[1,2], ...
+	2*[0 0 .1 0 0  0.1 zeros(1,18) 0 0 .1 0 0  0.1]',opt);
+
+% Concatinate the simulatoin results on the first two intervals
+tt = [tt1;tt2];
+XX = [XX1;XX2];
+
+% Date matrices for learning
+Dxx=[];
+Dzz=[];
+Dxz=[];
+Ixx=[];
+Ixz=[];
+Izz=[];
+Izu=[];
+Ixu=[];
+Idx=[];
+Idz=[];
+Ixiu2=[];
+Ixixi2=[];
+Ixix2=[];
+Dxixi2=[];
+X = XX;
+
+% Collect data on 10 intervals
+for ct = 0:9
+	% Simulation
+    [t,X] = ode45(@(t,x) syncMachine(t,x,pmgr), ...
+		[0,pmgr.T] + 2 + ct*pmgr.T, X(end,:)', opt);
+	% Parse output simulation data 
+    tt = [tt;t]; %#ok<AGROW>
+    XX = [XX;X]; %#ok<AGROW>
+    Dxx = [Dxx;kron(X(end,1:2),X(end,1:2))-kron(X(1,1:2),X(1,1:2))]; %#ok<AGROW>
+    Dzz = [Dzz;X(end,3)^2-X(1,3)^2]; %#ok<AGROW>
+    Dxz = [Dxz;X(end,1:2)*X(end,3)-X(1,1:2)*X(1,3)]; %#ok<AGROW>
+    Ixx = [Ixx;X(end,7:10)-X(1,7:10)]; %#ok<AGROW>
+    Ixu = [Ixu;X(end,11:12)-X(1,11:12)]; %#ok<AGROW>
+    Ixz = [Ixz;X(end,13:14)-X(1,13:14)]; %#ok<AGROW>
+    Izz = [Izz;X(end,15)-X(1,15)]; %#ok<AGROW>
+    Izu = [Izu;X(end,16)-X(1,16)]; %#ok<AGROW>
+    Idx = [Idx;X(end,17:18)-X(1,17:18)]; %#ok<AGROW>
+    Idz = [Idz;X(end,19)-X(1,19)]; %#ok<AGROW>
+    Ixiu2 = [Ixiu2;X(end,21)-X(1,21)]; %#ok<AGROW>
+    Ixixi2 = [Ixixi2;X(end,22)-X(1,22)]; %#ok<AGROW>
+    Ixix2 = [Ixix2;X(end,23:24)-X(1,23:24)]; %#ok<AGROW>
+    Dxixi2 =[Dxixi2; X(end,20)^2-X(1,20)^2]; %#ok<AGROW>
+end
+
+% For Phase-One Learning
+D = 0.3*eye(2);
+Q = [5 0; 0 0.0001];
+R = 1;
+K = [1 1];
+Pold = -100*eye(2);
+P = zeros(2);
+Psave = [];
+it1 = 0;
+[K0,P0,E0] = lqr(pmgr.A1(1:2,1:2),pmgr.A1(1:2,3),Q,R);
+
+while norm(P-Pold)>1e-8
+    it1 = it1+1;
+    Pold = P;
+    theta = [Dxx(:,[1,2,4]) -2*Ixx*kron(eye(2),K')-2*(Ixz+Idx)];
+    Qk = Q + K'*R*K;
+    Xi = -Ixx*Qk(:);
+    PL = theta \ Xi;
+    P = [PL(1)   PL(2)/2;
+        PL(2)/2 PL(3)];
+    
+    L = PL(4:5)';
+    K = R \ L;    
+end
+
+%% For Phase-Two Learning
+%K=K0;P=P0;
+B = pmgr.A1(1:2,3);
+H = 0;
+G = 1/pmgr.T1;
+F = -1/pmgr.T1;
+Dc = 0+ G\K*(P\K');
+W = 0.1;
+V = 1.7438e-004; 
+
+M = 10*K*(P\K'*R);
+Dxixi = Dzz + 2*Dxz*K'+ Dxx*kron(K',K');
+Ixixi = Izz + 2*Ixz*K'+ Ixx*kron(K',K');
+Ixxi = Ixz + Ixx*kron(eye(2),K');
+Idxi = Idz + Idx*K';
+Ixiuk = Izu + Ixu*K';
+
+Sold = -100*eye(2);
+S = zeros(1);
+it2 = 0;
+Fc = F + pmgr.K0*B;
+[M0,S0,E2] = lqr(Fc,G,W,V);
+Ssave = [];
+Nsave = [];
+Msave = norm(M-M0);
+
+while norm(Sold-S)>1e-8
+    Sold=S;
+    it2 = it2+1;
+    phi = [Dxixi   -2*Ixixi*M*V-2*Ixiuk*V -2*Ixxi -2*Idxi];
+    Wk = W + M'*V*M;
+    psi = -Ixixi*Wk(:);
+    SN = phi\psi;
+    S = SN(1);
+    M = SN(2);
+    N = SN(3:4)';
+    L = SN(5);
+end
+
+pmgr.KM = [(M*V)\(N+K)+M*K M];
+
+N0 = S0*(pmgr.K0*(pmgr.A1(1:2,1:2)-B*pmgr.K0));
+KM0 = [(M0*V)\(N0+pmgr.K0)+M0*pmgr.K0 M0];
+KM = [(M*V)\(N+K)+M*K M];
+
+% Post learning simulation
+[t,X]=ode45(@(t,x) syncMachine(t,x,pmgr),[tt(end) 15],XX(end,:)', opt);
+XX = [XX;X];
+tt = [tt;t];
+
+%% Plot results
+figure(2)
+subplot(211)
+plot(tt,(XX(:,1) + pmgr.angle10)*180/pi,tt,(XX(:,25) + pmgr.angle10)*180/pi,'r-.','Linewidth',1.5)
+legend('Robust ADP','Unlearned')
+xlabel('time (sec)')
+ylabel('Rotor Angle (degree)')
+axis([0 10 0 120])
+title('Generator 1')
+
+subplot(212)
+plot(tt,(XX(:,4) + pmgr.angle20)*180/pi,tt,(XX(:,28) + pmgr.angle20)*180/pi,'r-.','Linewidth',1.5)
+legend('Robust ADP','Unlearned')
+xlabel('time (sec)')
+ylabel('Rotor Angle (degree)')
+axis([0 10 60 80])
+title('Generator 2')
+
+% Create textarrow
+annotation(figure(2),'textarrow',[0.234811165845649 0.215106732348112],...
+    [0.187763713080168 0.244725738396624],'String',{'Disturbance injected'});
+annotation(figure(2),'textarrow',[0.399014778325123 0.371100164203612],...
+    [0.657227848101265 0.71097046413502],'String',{'Controller updated'});
+annotation(figure(2),'textarrow',[0.405582922824302 0.377668308702791],...
+    [0.171995780590716 0.22573839662447],'String',{'Controller updated'});
+annotation(figure(2),'textarrow',[0.239737274220033 0.220032840722496],...
+    [0.681434599156118 0.738396624472574],'String',{'Disturbance injected'});
+
+figure(3)
+subplot(211)
+plot(tt,XX(:,1)/2/pi+50,tt,XX(:,25)/2/pi+50,'r-.','Linewidth',1.5)
+legend('Robust ADP','Unlearned')
+xlabel('time (sec)')
+ylabel('Frequency (Hz)')
+axis([0 10 49.8 50.2])
+title('Generator 1')
+
+subplot(212)
+plot(tt,XX(:,5)/2/pi+50,tt,XX(:,29)/2/pi+50,'r-.','Linewidth',1.5)
+legend('Robust ADP','Unlearned')
+xlabel('time (sec)')
+ylabel('Frequency (Hz)')
+axis([0 10 49.8 50.2])
+title('Generator 2')
+
+% Create textarrow
+annotation(figure(3),'textarrow',[0.234811165845649 0.215106732348112],...
+    [0.187763713080168 0.244725738396624],'String',{'Disturbance injected'});
+annotation(figure(3),'textarrow',[0.399014778325123 0.371100164203612],...
+    [0.657227848101265 0.71097046413502],'String',{'Controller updated'});
+annotation(figure(3),'textarrow',[0.405582922824302 0.377668308702791],...
+    [0.171995780590716 0.22573839662447],'String',{'Controller updated'});
+annotation(figure(3),'textarrow',[0.239737274220033 0.220032840722496],...
+    [0.681434599156118 0.738396624472574],'String',{'Disturbance injected'});
+
+
+##### SOURCE END #####
+--></body></html>

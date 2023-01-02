@@ -1,0 +1,423 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ADP for sensorimotor control</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-26"><meta name="DC.source" content="Ch7Ex1_main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>ADP for sensorimotor control</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Simulate the DF</a></li><li><a href="#2">Simulate the VF</a></li><li><a href="#3">Valide Fitts Law</a></li></ul></div><h2>Simulate the DF<a name="1"></a></h2><pre class="codeinput">MDF = DFSimulator();
+simNF(MDF);
+simDF(MDF);
+simAL(MDF);
+simAE(MDF);
+showStiffness(MDF);
+</pre><img vspace="5" hspace="5" src="Ch7Ex1_main_01.png" alt=""> <img vspace="5" hspace="5" src="Ch7Ex1_main_02.png" alt=""> <img vspace="5" hspace="5" src="Ch7Ex1_main_03.png" alt=""> <h2>Simulate the VF<a name="2"></a></h2><pre class="codeinput">MVF = VFSimulator();
+simNF(MVF);
+simVF(MVF);
+simAL(MVF);
+simAE(MVF);
+showStiffness(MVF);
+</pre><pre class="codeoutput">Simulating the 2nd trial...
+Simulating the 3rd trial...
+Simulating the 4th trial...
+Simulating the 5th trial...
+
+ans = 
+
+  Figure (4) with properties:
+
+      Number: 4
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [403 246 560 420]
+       Units: 'pixels'
+
+  Use GET to show all properties
+
+</pre><img vspace="5" hspace="5" src="Ch7Ex1_main_04.png" alt=""> <img vspace="5" hspace="5" src="Ch7Ex1_main_05.png" alt=""> <img vspace="5" hspace="5" src="Ch7Ex1_main_06.png" alt=""> <h2>Valide Fitts Law<a name="3"></a></h2><pre class="codeinput"><span class="comment">%NF</span>
+disp(<span class="string">'Simulating the NF...'</span>)
+wdd = 2.2:0.1:6;
+r=0.5./(2.^wdd);
+T=r;
+<span class="keyword">for</span> i=1:length(r) <span class="comment">% generating each single trial</span>
+    disp([<span class="string">'Simulating the NF...'</span>, <span class="string">'Trial: #'</span>, num2str(i), <span class="string">' ('</span>, num2str(length(r)-i), <span class="string">'trials left)'</span>])
+    <span class="comment">% T(i) = fitts_movement_duration_NF(r(i));</span>
+    MDF.reset();
+    T(i) = MDF.getMovementDuration(r(i));
+<span class="keyword">end</span>
+figure
+subplot(321)
+fit1l = polyfit(wdd,T,1);
+plot(wdd,T,<span class="string">'+'</span>,wdd,fit1l(2)+fit1l(1).*wdd,<span class="string">'linewidth'</span>,1.5);
+axis([1,7,0,0.8]);
+xlabel(<span class="string">'\fontsize{12}log_2(2d/s)'</span>)
+ylabel(<span class="string">'\fontsize{12}Movement time t_f (sec)'</span>)
+title(<span class="string">'\fontsize{12}A'</span>);
+legend(<span class="string">'\fontsize{12}Movement duration of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the log law'</span>);
+subplot(322)
+fit1p = polyfit(log(0.25./r),log(T),1);
+plot(log(0.25./r),log(T),<span class="string">'+'</span>,log(0.25./r),fit1p(2)+fit1p(1).*log(0.25./r),<span class="string">'linewidth'</span>,1.5);
+legend(<span class="string">'\fontsize{12}Movement duration  of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the power law'</span>);
+axis([0,4,-2,0]);
+xlabel(<span class="string">'\fontsize{12}ln(d/s)'</span>);
+ylabel(<span class="string">'\fontsize{12}ln(t_f)'</span>);
+title(<span class="string">'\fontsize{12}B'</span>);
+<span class="comment">% VF</span>
+Tvf = zeros(size(r));
+<span class="keyword">for</span> i=1:length(r)
+    disp([<span class="string">'Simulating the VF...'</span>, <span class="string">'Trial: #'</span>, num2str(i), <span class="string">' ('</span>, num2str(length(r)-i), <span class="string">'trials left)'</span>]);
+    <span class="comment">% Tvf(i) = fitts_movement_duration_VF(r(i));</span>
+    Tvf(i) = MVF.getPostLearningMovementDuration(r(i));
+<span class="keyword">end</span>
+<span class="comment">%figure</span>
+<span class="comment">%subplot(121)</span>
+subplot(323)
+fit2l = polyfit(wdd,Tvf,1);
+plot(wdd,Tvf,<span class="string">'+'</span>,wdd,fit2l(2)+fit2l(1).*wdd,<span class="string">'linewidth'</span>,1.5);
+axis([1,7,0,1.5]);
+xlabel(<span class="string">'\fontsize{12}log_2(2d/s)'</span>);
+ylabel(<span class="string">'\fontsize{12}Movement time t_f (sec)'</span>);
+title(<span class="string">'\fontsize{12}C'</span>);
+legend(<span class="string">'\fontsize{12}Movement duration of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the log law'</span>);
+<span class="comment">%subplot(122)</span>
+subplot(324)
+fit2p = polyfit(log(0.25./r),log(Tvf),1);
+plot(log(0.25./r),log(Tvf),<span class="string">'+'</span>,log(0.25./r),fit2p(2)+fit2p(1).*log(0.25./r),<span class="string">'linewidth'</span>,1.5);
+legend(<span class="string">'\fontsize{12}Movement duration  of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the power law'</span>);
+axis([0,4,-2,0.7]);
+xlabel(<span class="string">'\fontsize{12}ln(d/s)'</span>);
+ylabel(<span class="string">'\fontsize{12}ln(t_f)'</span>);
+title(<span class="string">'\fontsize{12}D'</span>);
+<span class="comment">% DF</span>
+Tdf = zeros(size(r));
+<span class="keyword">for</span> i=1:length(r)
+    disp([<span class="string">'Simulating the DF...'</span>, <span class="string">'Trial: #'</span>, num2str(i), <span class="string">' ('</span>, num2str(length(r)-i), <span class="string">'trials left)'</span>]);
+    MDF.K = MDF.Ko;
+    Tdf(i) = MDF.getMovementDuration(r(i));
+<span class="keyword">end</span>
+<span class="comment">%</span>
+<span class="comment">%figure</span>
+<span class="comment">%subplot(121);</span>
+subplot(325)
+fit3l = polyfit(wdd,Tdf,1);
+plot(wdd,Tdf,<span class="string">'+'</span>,wdd,fit3l(2)+fit3l(1).*wdd,<span class="string">'linewidth'</span>,1.5);
+axis([1,7,0,0.8]);
+xlabel(<span class="string">'\fontsize{12}log_2(2d/s)'</span>);
+ylabel(<span class="string">'\fontsize{12}Movement time t_f (sec)'</span>);
+title(<span class="string">'\fontsize{12}E'</span>);
+legend(<span class="string">'\fontsize{12}Movement duration of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the log law'</span>);
+<span class="comment">%subplot(122);</span>
+subplot(326)
+fit3p = polyfit(log(0.25./r),log(Tdf),1);
+plot(log(0.25./r),log(Tdf),<span class="string">'+'</span>,log(0.25./r),fit3p(2)+fit3p(1).*log(0.25./r),<span class="string">'linewidth'</span>,1.5);
+legend(<span class="string">'\fontsize{12}Movement duration  of each trial'</span>, <span class="string">'\fontsize{12}Least-squares fit using the power law'</span>);
+axis([0,4,-2,0]);
+xlabel(<span class="string">'\fontsize{12}ln(d/s)'</span>);
+ylabel(<span class="string">'\fontsize{12}ln(t_f)'</span>);
+title(<span class="string">'\fontsize{12}F'</span>);
+<span class="comment">% Display the fitted parameters</span>
+disp(<span class="string">'Fitting results:'</span>)
+disp([<span class="string">'NF Log   Law:'</span>, <span class="string">'a='</span>,num2str(fit1l(1)), <span class="string">' b='</span>, num2str(fit1l(2))]);
+disp([<span class="string">'NF Power Law:'</span>, <span class="string">'a='</span>,num2str(fit1p(1)), <span class="string">' b='</span>, num2str(fit1p(2))]);
+disp([<span class="string">'VF Log   Law:'</span>, <span class="string">'a='</span>,num2str(fit2l(1)), <span class="string">' b='</span>, num2str(fit2l(2))]);
+disp([<span class="string">'VF Power Law:'</span>, <span class="string">'a='</span>,num2str(fit2p(1)), <span class="string">' b='</span>, num2str(fit2p(2))]);
+disp([<span class="string">'DF Log   Law:'</span>, <span class="string">'a='</span>,num2str(fit3l(1)), <span class="string">' b='</span>, num2str(fit3l(2))]);
+disp([<span class="string">'DF Power Law:'</span>, <span class="string">'a='</span>,num2str(fit3p(1)), <span class="string">' b='</span>, num2str(fit3p(2))]);
+</pre><pre class="codeoutput">Simulating the NF...
+Simulating the NF...Trial: #1 (38trials left)
+Simulating the NF...Trial: #2 (37trials left)
+Simulating the NF...Trial: #3 (36trials left)
+Simulating the NF...Trial: #4 (35trials left)
+Simulating the NF...Trial: #5 (34trials left)
+Simulating the NF...Trial: #6 (33trials left)
+Simulating the NF...Trial: #7 (32trials left)
+Simulating the NF...Trial: #8 (31trials left)
+Simulating the NF...Trial: #9 (30trials left)
+Simulating the NF...Trial: #10 (29trials left)
+Simulating the NF...Trial: #11 (28trials left)
+Simulating the NF...Trial: #12 (27trials left)
+Simulating the NF...Trial: #13 (26trials left)
+Simulating the NF...Trial: #14 (25trials left)
+Simulating the NF...Trial: #15 (24trials left)
+Simulating the NF...Trial: #16 (23trials left)
+Simulating the NF...Trial: #17 (22trials left)
+Simulating the NF...Trial: #18 (21trials left)
+Simulating the NF...Trial: #19 (20trials left)
+Simulating the NF...Trial: #20 (19trials left)
+Simulating the NF...Trial: #21 (18trials left)
+Simulating the NF...Trial: #22 (17trials left)
+Simulating the NF...Trial: #23 (16trials left)
+Simulating the NF...Trial: #24 (15trials left)
+Simulating the NF...Trial: #25 (14trials left)
+Simulating the NF...Trial: #26 (13trials left)
+Simulating the NF...Trial: #27 (12trials left)
+Simulating the NF...Trial: #28 (11trials left)
+Simulating the NF...Trial: #29 (10trials left)
+Simulating the NF...Trial: #30 (9trials left)
+Simulating the NF...Trial: #31 (8trials left)
+Simulating the NF...Trial: #32 (7trials left)
+Simulating the NF...Trial: #33 (6trials left)
+Simulating the NF...Trial: #34 (5trials left)
+Simulating the NF...Trial: #35 (4trials left)
+Simulating the NF...Trial: #36 (3trials left)
+Simulating the NF...Trial: #37 (2trials left)
+Simulating the NF...Trial: #38 (1trials left)
+Simulating the NF...Trial: #39 (0trials left)
+Simulating the VF...Trial: #1 (38trials left)
+Simulating the VF...Trial: #2 (37trials left)
+Simulating the VF...Trial: #3 (36trials left)
+Simulating the VF...Trial: #4 (35trials left)
+Simulating the VF...Trial: #5 (34trials left)
+Simulating the VF...Trial: #6 (33trials left)
+Simulating the VF...Trial: #7 (32trials left)
+Simulating the VF...Trial: #8 (31trials left)
+Simulating the VF...Trial: #9 (30trials left)
+Simulating the VF...Trial: #10 (29trials left)
+Simulating the VF...Trial: #11 (28trials left)
+Simulating the VF...Trial: #12 (27trials left)
+Simulating the VF...Trial: #13 (26trials left)
+Simulating the VF...Trial: #14 (25trials left)
+Simulating the VF...Trial: #15 (24trials left)
+Simulating the VF...Trial: #16 (23trials left)
+Simulating the VF...Trial: #17 (22trials left)
+Simulating the VF...Trial: #18 (21trials left)
+Simulating the VF...Trial: #19 (20trials left)
+Simulating the VF...Trial: #20 (19trials left)
+Simulating the VF...Trial: #21 (18trials left)
+Simulating the VF...Trial: #22 (17trials left)
+Simulating the VF...Trial: #23 (16trials left)
+Simulating the VF...Trial: #24 (15trials left)
+Simulating the VF...Trial: #25 (14trials left)
+Simulating the VF...Trial: #26 (13trials left)
+Simulating the VF...Trial: #27 (12trials left)
+Simulating the VF...Trial: #28 (11trials left)
+Simulating the VF...Trial: #29 (10trials left)
+Simulating the VF...Trial: #30 (9trials left)
+Simulating the VF...Trial: #31 (8trials left)
+Simulating the VF...Trial: #32 (7trials left)
+Simulating the VF...Trial: #33 (6trials left)
+Simulating the VF...Trial: #34 (5trials left)
+Simulating the VF...Trial: #35 (4trials left)
+Simulating the VF...Trial: #36 (3trials left)
+Simulating the VF...Trial: #37 (2trials left)
+Simulating the VF...Trial: #38 (1trials left)
+Simulating the VF...Trial: #39 (0trials left)
+Simulating the DF...Trial: #1 (38trials left)
+Simulating the DF...Trial: #2 (37trials left)
+Simulating the DF...Trial: #3 (36trials left)
+Simulating the DF...Trial: #4 (35trials left)
+Simulating the DF...Trial: #5 (34trials left)
+Simulating the DF...Trial: #6 (33trials left)
+Simulating the DF...Trial: #7 (32trials left)
+Simulating the DF...Trial: #8 (31trials left)
+Simulating the DF...Trial: #9 (30trials left)
+Simulating the DF...Trial: #10 (29trials left)
+Simulating the DF...Trial: #11 (28trials left)
+Simulating the DF...Trial: #12 (27trials left)
+Simulating the DF...Trial: #13 (26trials left)
+Simulating the DF...Trial: #14 (25trials left)
+Simulating the DF...Trial: #15 (24trials left)
+Simulating the DF...Trial: #16 (23trials left)
+Simulating the DF...Trial: #17 (22trials left)
+Simulating the DF...Trial: #18 (21trials left)
+Simulating the DF...Trial: #19 (20trials left)
+Simulating the DF...Trial: #20 (19trials left)
+Simulating the DF...Trial: #21 (18trials left)
+Simulating the DF...Trial: #22 (17trials left)
+Simulating the DF...Trial: #23 (16trials left)
+Simulating the DF...Trial: #24 (15trials left)
+Simulating the DF...Trial: #25 (14trials left)
+Simulating the DF...Trial: #26 (13trials left)
+Simulating the DF...Trial: #27 (12trials left)
+Simulating the DF...Trial: #28 (11trials left)
+Simulating the DF...Trial: #29 (10trials left)
+Simulating the DF...Trial: #30 (9trials left)
+Simulating the DF...Trial: #31 (8trials left)
+Simulating the DF...Trial: #32 (7trials left)
+Simulating the DF...Trial: #33 (6trials left)
+Simulating the DF...Trial: #34 (5trials left)
+Simulating the DF...Trial: #35 (4trials left)
+Simulating the DF...Trial: #36 (3trials left)
+Simulating the DF...Trial: #37 (2trials left)
+Simulating the DF...Trial: #38 (1trials left)
+Simulating the DF...Trial: #39 (0trials left)
+Fitting results:
+NF Log   Law:a=0.05832 b=0.12115
+NF Power Law:a=0.24525 b=-1.5675
+VF Log   Law:a=0.22798 b=-0.19291
+VF Power Law:a=0.4797 b=-1.3968
+DF Log   Law:a=0.064231 b=0.093577
+DF Power Law:a=0.27257 b=-1.6389
+</pre><img vspace="5" hspace="5" src="Ch7Ex1_main_07.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% ADP for sensorimotor control
+
+%% Simulate the DF
+MDF = DFSimulator();
+simNF(MDF);
+simDF(MDF);
+simAL(MDF);
+simAE(MDF);
+showStiffness(MDF);
+%% Simulate the VF
+MVF = VFSimulator();
+simNF(MVF);
+simVF(MVF);
+simAL(MVF);
+simAE(MVF);
+showStiffness(MVF);
+%% Valide Fitts Law
+%NF
+disp('Simulating the NF...')
+wdd = 2.2:0.1:6;
+r=0.5./(2.^wdd);
+T=r;
+for i=1:length(r) % generating each single trial
+    disp(['Simulating the NF...', 'Trial: #', num2str(i), ' (', num2str(length(r)-i), 'trials left)'])
+    % T(i) = fitts_movement_duration_NF(r(i));
+    MDF.reset();
+    T(i) = MDF.getMovementDuration(r(i));
+end
+figure
+subplot(321)
+fit1l = polyfit(wdd,T,1);
+plot(wdd,T,'+',wdd,fit1l(2)+fit1l(1).*wdd,'linewidth',1.5);
+axis([1,7,0,0.8]);
+xlabel('\fontsize{12}log_2(2d/s)')
+ylabel('\fontsize{12}Movement time t_f (sec)')
+title('\fontsize{12}A');
+legend('\fontsize{12}Movement duration of each trial', '\fontsize{12}Least-squares fit using the log law');
+subplot(322)
+fit1p = polyfit(log(0.25./r),log(T),1);
+plot(log(0.25./r),log(T),'+',log(0.25./r),fit1p(2)+fit1p(1).*log(0.25./r),'linewidth',1.5);
+legend('\fontsize{12}Movement duration  of each trial', '\fontsize{12}Least-squares fit using the power law');
+axis([0,4,-2,0]);
+xlabel('\fontsize{12}ln(d/s)');
+ylabel('\fontsize{12}ln(t_f)');
+title('\fontsize{12}B');
+% VF
+Tvf = zeros(size(r));
+for i=1:length(r)
+    disp(['Simulating the VF...', 'Trial: #', num2str(i), ' (', num2str(length(r)-i), 'trials left)']);
+    % Tvf(i) = fitts_movement_duration_VF(r(i));
+    Tvf(i) = MVF.getPostLearningMovementDuration(r(i));
+end
+%figure
+%subplot(121)
+subplot(323)
+fit2l = polyfit(wdd,Tvf,1);
+plot(wdd,Tvf,'+',wdd,fit2l(2)+fit2l(1).*wdd,'linewidth',1.5);
+axis([1,7,0,1.5]);
+xlabel('\fontsize{12}log_2(2d/s)');
+ylabel('\fontsize{12}Movement time t_f (sec)');
+title('\fontsize{12}C');
+legend('\fontsize{12}Movement duration of each trial', '\fontsize{12}Least-squares fit using the log law');
+%subplot(122)
+subplot(324)
+fit2p = polyfit(log(0.25./r),log(Tvf),1);
+plot(log(0.25./r),log(Tvf),'+',log(0.25./r),fit2p(2)+fit2p(1).*log(0.25./r),'linewidth',1.5);
+legend('\fontsize{12}Movement duration  of each trial', '\fontsize{12}Least-squares fit using the power law');
+axis([0,4,-2,0.7]);
+xlabel('\fontsize{12}ln(d/s)');
+ylabel('\fontsize{12}ln(t_f)');
+title('\fontsize{12}D');
+% DF
+Tdf = zeros(size(r));
+for i=1:length(r)
+    disp(['Simulating the DF...', 'Trial: #', num2str(i), ' (', num2str(length(r)-i), 'trials left)']);
+    MDF.K = MDF.Ko;
+    Tdf(i) = MDF.getMovementDuration(r(i));
+end
+%
+%figure
+%subplot(121);
+subplot(325)
+fit3l = polyfit(wdd,Tdf,1);
+plot(wdd,Tdf,'+',wdd,fit3l(2)+fit3l(1).*wdd,'linewidth',1.5);
+axis([1,7,0,0.8]);
+xlabel('\fontsize{12}log_2(2d/s)');
+ylabel('\fontsize{12}Movement time t_f (sec)');
+title('\fontsize{12}E');
+legend('\fontsize{12}Movement duration of each trial', '\fontsize{12}Least-squares fit using the log law');
+%subplot(122);
+subplot(326)
+fit3p = polyfit(log(0.25./r),log(Tdf),1);
+plot(log(0.25./r),log(Tdf),'+',log(0.25./r),fit3p(2)+fit3p(1).*log(0.25./r),'linewidth',1.5);
+legend('\fontsize{12}Movement duration  of each trial', '\fontsize{12}Least-squares fit using the power law');
+axis([0,4,-2,0]);
+xlabel('\fontsize{12}ln(d/s)');
+ylabel('\fontsize{12}ln(t_f)');
+title('\fontsize{12}F');
+% Display the fitted parameters
+disp('Fitting results:')
+disp(['NF Log   Law:', 'a=',num2str(fit1l(1)), ' b=', num2str(fit1l(2))]);
+disp(['NF Power Law:', 'a=',num2str(fit1p(1)), ' b=', num2str(fit1p(2))]);
+disp(['VF Log   Law:', 'a=',num2str(fit2l(1)), ' b=', num2str(fit2l(2))]);
+disp(['VF Power Law:', 'a=',num2str(fit2p(1)), ' b=', num2str(fit2p(2))]);
+disp(['DF Log   Law:', 'a=',num2str(fit3l(1)), ' b=', num2str(fit3l(2))]);
+disp(['DF Power Law:', 'a=',num2str(fit3p(1)), ' b=', num2str(fit3p(2))]);
+
+
+##### SOURCE END #####
+--></body></html>

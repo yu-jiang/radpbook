@@ -1,0 +1,469 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Off-policy learning for a turbocharged diesel engine</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-26"><meta name="DC.source" content="Ch2Ex2_main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Off-policy learning for a turbocharged diesel engine</h1><!--introduction--><p>This is the Numerical Example 2.2 in Chapter 2 of book Robust Adaptive Dynamic Programming by Yu Jiang and Zhong-Ping Jiang</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Parameters configuration</a></li><li><a href="#2">Run the simulation and obtain the data matrices \delta_{xx},</a></li><li><a href="#3">Off-policy learning using the collected online data</a></li><li><a href="#4">Post-learning simulations</a></li><li><a href="#5">Plotting results</a></li><li><a href="#6">Display results</a></li></ul></div><h2>Parameters configuration<a name="1"></a></h2><pre class="codeinput">xn = 6;
+un = 2;
+
+<span class="comment">% Set the weighting matrices for the cost function</span>
+Q = diag([100 0 0 0 0 100]);
+R = diag([1 1]);
+
+<span class="comment">% Initialize the feedback gain matrix</span>
+Kinit  = zeros(un,xn);  <span class="comment">%Only if A is Hurwitz, K can be set as zero.</span>
+K = Kinit;
+N  = 100;           <span class="comment">%Length of the window, should be at least xn^2+2*xn*un</span>
+MaxIteration = 10;  <span class="comment">%Max iteration times</span>
+T  = 0.01;          <span class="comment">%Length of each integration interval</span>
+
+x0 = [20;5;10;2;-1;-2]; <span class="comment">%Initial condition</span>
+
+expl_noise_freq = (rand(un,100)-.5)*100; <span class="comment">% Exploration noise frequencies</span>
+
+<span class="comment">% Matrices to collect online data and perform learning</span>
+Dxx=[];
+Ixx=[];
+Ixu=[];
+
+<span class="comment">% Initial condition of the augmented system</span>
+X=[x0;kron(x0',x0')';kron(x0,zeros(un,1))]';
+</pre><h2>Run the simulation and obtain the data matrices \delta_{xx},<a name="2"></a></h2><pre class="codeinput"><span class="comment">%I_{xx}, and I_{xu}</span>
+
+ifLearned = 0;
+
+x_save=[];
+t_save=[];
+
+<span class="keyword">for</span> i=1:N
+    <span class="comment">% Simulation the system and at the same time collect online info.</span>
+    [t,X] = ode45(@(t,x)aug_sys(t,x,K,ifLearned,expl_noise_freq), <span class="keyword">...</span>
+        [(i-1)*T,i*T],X(end,:));
+
+    <span class="comment">%Append new data to the data matrices</span>
+    Dxx=[Dxx;kron(X(end,1:xn),X(end,1:xn))-kron(X(1,1:xn),X(1,1:xn))];
+    Ixx=[Ixx;X(end,xn+1:xn+xn^2)-X(1,xn+1:xn+xn^2)];
+    Ixu=[Ixu;X(end,xn+xn^2+1:end)-X(1,xn+xn^2+1:end)];
+
+    <span class="comment">% Keep track of the system trajectories</span>
+    x_save=[x_save;X];
+    t_save=[t_save;t];
+<span class="keyword">end</span>
+
+ifLearned = 1; <span class="comment">% Mark learning finished</span>
+
+P_old = zeros(xn);
+P = eye(xn)*10;    <span class="comment">% Initialize the previous cost matrix</span>
+it = 0;            <span class="comment">% Counter for iterations</span>
+p_save = [];       <span class="comment">% Track the cost matrices in all the iterations</span>
+k_save = [];       <span class="comment">% Track the feedback gain matrix in each iterations</span>
+
+<span class="comment">% The system matrices are copied here only for the purpose of analyzing the</span>
+<span class="comment">% results</span>
+A = [-0.4125    -0.0248        0.0741     0.0089   0          0;
+    101.5873    -7.2651        2.7608     2.8068   0          0;
+    0.0704       0.0085       -0.0741    -0.0089   0          0.0200;
+    0.0878       0.2672        0         -0.3674   0.0044     0.3962;
+    -1.8414      0.0990        0          0       -0.0343    -0.0330;
+    0            0             0       -359      187.5364   -87.0316];
+
+B = [-0.0042  0.0064
+     -1.0360  1.5849
+      0.0042  0;
+      0.1261  0;
+      0      -0.0168;
+      0       0];
+
+[Kopt,Popt] = lqr(A,B,Q,R); <span class="comment">% Calculate the ideal solution for comparion purpose</span>
+k_save  = norm(K-Kopt);  <span class="comment">% keep track of the differences between the actual K</span>
+<span class="comment">% and the idea valu</span>
+</pre><h2>Off-policy learning using the collected online data<a name="3"></a></h2><pre class="codeinput"><span class="keyword">while</span> norm(P-P_old)&gt;1e-8 &amp; it&lt;MaxIteration
+    it = it+1;                        <span class="comment">% Update and display the # of iters</span>
+    P_old = P;                        <span class="comment">% Update the previous cost matrix</span>
+    QK = Q+K'*R*K;                    <span class="comment">% Update the Qk matrix</span>
+
+    Theta = [Dxx,-Ixx*kron(eye(xn),K')-Ixu];  <span class="comment">% Left-hand side of</span>
+    <span class="comment">% the key equation</span>
+    Xi = -Ixx*QK(:);                 <span class="comment">% Right-hand side of the key equation</span>
+    pp = pinv(Theta)*Xi;             <span class="comment">% Solve the equations in the LS sense</span>
+    P = reshape(pp(1:xn*xn), [xn, xn]);  <span class="comment">% Reconstruct the symmetric matrix</span>
+    P = (P + P')/2;
+
+    BPv = pp(end-(xn*un-1):end);
+    K = inv(R)*reshape(BPv,un,xn)/2;<span class="comment">% Get the improved gain matrix</span>
+    p_save = [p_save,norm(P-Popt)];   <span class="comment">% Keep track of the cost matrix</span>
+    k_save = [k_save,norm(K-Kopt)];    <span class="comment">% Keep track of the control gains</span>
+
+    disp([<span class="string">'K_'</span>, num2str(it), <span class="string">'='</span>]);
+    disp(K);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">K_1=
+   47.8326    0.7785    2.9006   42.1547  -24.8884   -0.0909
+   38.7653    0.4848    0.5799   20.7823  -11.6976    0.0712
+
+K_2=
+   20.3865    0.4444    1.2043   27.3859  -15.6164   -0.1539
+   18.1106    0.2602    0.0321   11.4403   -6.2478    0.0293
+
+K_3=
+   11.3687    0.3886    0.4585   24.9271  -13.7566   -0.1668
+    9.6886    0.2055    0.0395    9.3035   -5.0999    0.0184
+
+K_4=
+   10.7552    0.3875    0.4006   24.8447  -13.6680   -0.1672
+    9.0006    0.2031    0.0681    9.2034   -5.0791    0.0180
+
+K_5=
+   10.7537    0.3875    0.4006   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+K_6=
+   10.7537    0.3875    0.4006   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+K_7=
+   10.7537    0.3875    0.4005   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+K_8=
+   10.7537    0.3875    0.4005   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+K_9=
+   10.7537    0.3875    0.4005   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+K_10=
+   10.7537    0.3875    0.4006   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+</pre><h2>Post-learning simulations<a name="4"></a></h2><pre class="codeinput">[tt,xx]=ode45(@(t,x)aug_sys(t,x,K,ifLearned,expl_noise_freq), <span class="keyword">...</span>
+    [t(end) 10],X(end,:)');
+
+<span class="comment">% Keep track of the post-learning trajectories</span>
+t_final = [t_save;tt];
+x_final = [x_save;xx];
+
+<span class="comment">% For comparson, also get the unlearned simulation</span>
+[ttt,xxx]=ode45(@(t,x)aug_sys(t,x,Kinit,ifLearned,expl_noise_freq), <span class="keyword">...</span>
+    [t(end) 10],X(end,:)');
+t_unlearned = [t_save;ttt];
+x_unlearned = [x_save;xxx];
+</pre><h2>Plotting results<a name="5"></a></h2><pre class="codeinput">figure(1)
+subplot(211)
+plot(0:length(p_save)-1,p_save,<span class="string">'o'</span>,0:length(p_save)-1,p_save,<span class="string">'Linewidth'</span>,2);
+ylim([-max(p_save)*0.2 max(p_save)*1.2]);
+legend(<span class="string">'||P_k-P^*||'</span>)
+xlabel(<span class="string">'Number of iterations'</span>)
+
+subplot(212)
+plot(0:length(k_save)-1,k_save,<span class="string">'^'</span>,0:length(k_save)-1,k_save,<span class="string">'Linewidth'</span>,2)
+ylim([-max(k_save)*0.2 max(k_save)*1.2]);
+legend(<span class="string">'||K_k-K^*||'</span>)
+xlabel(<span class="string">'Number of iterations'</span>)
+
+<span class="comment">% Uncomment to save figure</span>
+<span class="comment">% print('Ch2_ex2_fig1_pk','-depsc')</span>
+
+figure(2)
+plot(t_final,x_final(:,1:6),<span class="string">'Linewidth'</span>,2)
+legend(<span class="string">'x_1'</span>,<span class="string">'x_2'</span>,<span class="string">'x_3'</span>,<span class="string">'x_4'</span>,<span class="string">'x_5'</span>,<span class="string">'x_6'</span>)
+xlabel(<span class="string">'Time (sec)'</span>)
+
+figure(3)
+plot(t_final, 3.6*x_final(:,6),<span class="string">'k-'</span>, <span class="keyword">...</span>
+     ttt, 3.6*xxx(:,6),<span class="string">'r--'</span>, <span class="keyword">...</span>
+    <span class="string">'Linewidth'</span>,2)
+ylim([-400 150])
+
+legend(<span class="string">'MAF (Under ADP)'</span>, <span class="string">'MAF (Unlearned)'</span>)
+xlabel(<span class="string">'Time (sec)'</span>,<span class="string">'FontSize'</span>,12)
+
+<span class="comment">% Create textarrow</span>
+annotation(figure(3),<span class="string">'textarrow'</span>,[0.2630173564753 0.218958611481976],<span class="keyword">...</span>
+	[0.166023166023166 0.198841698841699],<span class="string">'String'</span>,{<span class="string">'Controller Updated'</span>},<span class="keyword">...</span>
+	<span class="string">'FontSize'</span>,14);
+
+<span class="comment">% Uncomment to save figure</span>
+<span class="comment">% print('Ch2_ex2_fig2_y','-depsc')</span>
+</pre><img vspace="5" hspace="5" src="Ch2Ex2_main_01.png" alt=""> <img vspace="5" hspace="5" src="Ch2Ex2_main_02.png" alt=""> <img vspace="5" hspace="5" src="Ch2Ex2_main_03.png" alt=""> <h2>Display results<a name="6"></a></h2><pre class="codeinput">disp(<span class="string">'Approximate Cost Matrix'</span>)
+P
+disp(<span class="string">'Optimal Cost Matrix'</span>)
+Popt
+disp(<span class="string">'Approximate Gain Matrix'</span>)
+K
+disp(<span class="string">'Optimal Gain Matrix'</span>)
+Kopt
+</pre><pre class="codeoutput">Approximate Cost Matrix
+
+P =
+
+  766.7586    1.4019   97.3262  119.0937 -111.2552    0.6265
+    1.4019    0.1032   -0.6581    3.9893   -1.8221    0.0150
+   97.3262   -0.6581   71.6942   -1.3764  -29.0644    0.0230
+  119.0937    3.9893   -1.3764  233.8101 -126.0950   -1.1828
+ -111.2552   -1.8221  -29.0644 -126.0950   88.0805    0.5859
+    0.6265    0.0150    0.0230   -1.1828    0.5859    0.5687
+
+Optimal Cost Matrix
+
+Popt =
+
+  766.7586    1.4020   97.3265  119.0937 -111.2549    0.6265
+    1.4020    0.1032   -0.6581    3.9893   -1.8221    0.0150
+   97.3265   -0.6581   71.6915   -1.3767  -29.0678    0.0230
+  119.0937    3.9893   -1.3767  233.8101 -126.0952   -1.1828
+ -111.2549   -1.8221  -29.0678 -126.0952   88.0775    0.5859
+    0.6265    0.0150    0.0230   -1.1828    0.5859    0.5687
+
+Approximate Gain Matrix
+
+K =
+
+   10.7537    0.3875    0.4006   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0682    9.2032   -5.0796    0.0180
+
+Optimal Gain Matrix
+
+Kopt =
+
+   10.7537    0.3875    0.4006   24.8446  -13.6677   -0.1672
+    8.9983    0.2031    0.0681    9.2032   -5.0796    0.0180
+
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Off-policy learning for a turbocharged diesel engine
+% This is the Numerical Example 2.2 in Chapter 2 of book
+% Robust Adaptive Dynamic Programming 
+% by Yu Jiang and Zhong-Ping Jiang
+
+%% Parameters configuration
+xn = 6;
+un = 2;
+
+% Set the weighting matrices for the cost function
+Q = diag([100 0 0 0 0 100]);
+R = diag([1 1]);
+
+% Initialize the feedback gain matrix
+Kinit  = zeros(un,xn);  %Only if A is Hurwitz, K can be set as zero.
+K = Kinit;
+N  = 100;           %Length of the window, should be at least xn^2+2*xn*un
+MaxIteration = 10;  %Max iteration times
+T  = 0.01;          %Length of each integration interval
+
+x0 = [20;5;10;2;-1;-2]; %Initial condition
+
+expl_noise_freq = (rand(un,100)-.5)*100; % Exploration noise frequencies
+
+% Matrices to collect online data and perform learning
+Dxx=[];
+Ixx=[];
+Ixu=[];
+
+% Initial condition of the augmented system
+X=[x0;kron(x0',x0')';kron(x0,zeros(un,1))]';
+
+%% Run the simulation and obtain the data matrices \delta_{xx},
+%I_{xx}, and I_{xu}
+
+ifLearned = 0;
+
+x_save=[];
+t_save=[];
+
+for i=1:N
+    % Simulation the system and at the same time collect online info.
+    [t,X] = ode45(@(t,x)aug_sys(t,x,K,ifLearned,expl_noise_freq), ...
+        [(i-1)*T,i*T],X(end,:));
+    
+    %Append new data to the data matrices
+    Dxx=[Dxx;kron(X(end,1:xn),X(end,1:xn))-kron(X(1,1:xn),X(1,1:xn))];
+    Ixx=[Ixx;X(end,xn+1:xn+xn^2)-X(1,xn+1:xn+xn^2)];
+    Ixu=[Ixu;X(end,xn+xn^2+1:end)-X(1,xn+xn^2+1:end)];
+    
+    % Keep track of the system trajectories
+    x_save=[x_save;X];
+    t_save=[t_save;t];
+end
+
+ifLearned = 1; % Mark learning finished
+
+P_old = zeros(xn);
+P = eye(xn)*10;    % Initialize the previous cost matrix
+it = 0;            % Counter for iterations
+p_save = [];       % Track the cost matrices in all the iterations
+k_save = [];       % Track the feedback gain matrix in each iterations
+
+% The system matrices are copied here only for the purpose of analyzing the
+% results
+A = [-0.4125    -0.0248        0.0741     0.0089   0          0;
+    101.5873    -7.2651        2.7608     2.8068   0          0;
+    0.0704       0.0085       -0.0741    -0.0089   0          0.0200;
+    0.0878       0.2672        0         -0.3674   0.0044     0.3962;
+    -1.8414      0.0990        0          0       -0.0343    -0.0330;
+    0            0             0       -359      187.5364   -87.0316];
+
+B = [-0.0042  0.0064
+     -1.0360  1.5849
+      0.0042  0;
+      0.1261  0;
+      0      -0.0168;
+      0       0];
+
+[Kopt,Popt] = lqr(A,B,Q,R); % Calculate the ideal solution for comparion purpose
+k_save  = norm(K-Kopt);  % keep track of the differences between the actual K
+% and the idea valu
+
+%% Off-policy learning using the collected online data
+while norm(P-P_old)>1e-8 & it<MaxIteration
+    it = it+1;                        % Update and display the # of iters
+    P_old = P;                        % Update the previous cost matrix
+    QK = Q+K'*R*K;                    % Update the Qk matrix
+    
+    Theta = [Dxx,-Ixx*kron(eye(xn),K')-Ixu];  % Left-hand side of
+    % the key equation
+    Xi = -Ixx*QK(:);                 % Right-hand side of the key equation
+    pp = pinv(Theta)*Xi;             % Solve the equations in the LS sense
+    P = reshape(pp(1:xn*xn), [xn, xn]);  % Reconstruct the symmetric matrix
+    P = (P + P')/2;
+    
+    BPv = pp(end-(xn*un-1):end);
+    K = inv(R)*reshape(BPv,un,xn)/2;% Get the improved gain matrix
+    p_save = [p_save,norm(P-Popt)];   % Keep track of the cost matrix
+    k_save = [k_save,norm(K-Kopt)];    % Keep track of the control gains
+    
+    disp(['K_', num2str(it), '=']);
+    disp(K);
+end
+
+%% Post-learning simulations
+[tt,xx]=ode45(@(t,x)aug_sys(t,x,K,ifLearned,expl_noise_freq), ...
+    [t(end) 10],X(end,:)');
+
+% Keep track of the post-learning trajectories
+t_final = [t_save;tt];
+x_final = [x_save;xx];
+
+% For comparson, also get the unlearned simulation
+[ttt,xxx]=ode45(@(t,x)aug_sys(t,x,Kinit,ifLearned,expl_noise_freq), ...
+    [t(end) 10],X(end,:)');
+t_unlearned = [t_save;ttt];
+x_unlearned = [x_save;xxx];
+
+%% Plotting results
+figure(1)
+subplot(211)
+plot(0:length(p_save)-1,p_save,'o',0:length(p_save)-1,p_save,'Linewidth',2);
+ylim([-max(p_save)*0.2 max(p_save)*1.2]);
+legend('||P_k-P^*||')
+xlabel('Number of iterations')
+
+subplot(212)
+plot(0:length(k_save)-1,k_save,'^',0:length(k_save)-1,k_save,'Linewidth',2)
+ylim([-max(k_save)*0.2 max(k_save)*1.2]);
+legend('||K_k-K^*||')
+xlabel('Number of iterations')
+
+% Uncomment to save figure
+% print('Ch2_ex2_fig1_pk','-depsc')
+
+figure(2)
+plot(t_final,x_final(:,1:6),'Linewidth',2)
+legend('x_1','x_2','x_3','x_4','x_5','x_6')
+xlabel('Time (sec)')
+
+figure(3)
+plot(t_final, 3.6*x_final(:,6),'k-', ...
+     ttt, 3.6*xxx(:,6),'rREPLACE_WITH_DASH_DASH', ...
+    'Linewidth',2)
+ylim([-400 150])
+
+legend('MAF (Under ADP)', 'MAF (Unlearned)')
+xlabel('Time (sec)','FontSize',12)
+
+% Create textarrow
+annotation(figure(3),'textarrow',[0.2630173564753 0.218958611481976],...
+	[0.166023166023166 0.198841698841699],'String',{'Controller Updated'},...
+	'FontSize',14);
+
+% Uncomment to save figure
+% print('Ch2_ex2_fig2_y','-depsc')
+
+
+%% Display results
+disp('Approximate Cost Matrix')
+P
+disp('Optimal Cost Matrix')
+Popt
+disp('Approximate Gain Matrix')
+K
+disp('Optimal Gain Matrix')
+Kopt
+
+
+##### SOURCE END #####
+--></body></html>
